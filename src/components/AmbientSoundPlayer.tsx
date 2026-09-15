@@ -27,11 +27,13 @@ import { SoundwaveVisualizer } from './SoundwaveVisualizer';
 interface AmbientSoundPlayerProps {
   isTimerRunning: boolean;
   compact?: boolean;
+  isLight?: boolean;
 }
 
 export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({ 
   isTimerRunning,
   compact = false,
+  isLight = false,
 }) => {
   const [mode, setMode] = useState<AmbientSoundMode>('none');
   const [volume, setVolume] = useState<number>(0.5);
@@ -112,13 +114,21 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
   const isAudioActive = mode !== 'none' && !isMuted;
 
   return (
-    <div className="w-full space-y-3.5 text-slate-200">
+    <div className={`w-full space-y-3.5 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
       {/* Live Audio Visualizer Banner */}
-      <div className="p-3.5 rounded-2xl bg-gradient-to-r from-[#061022] via-[#091836] to-[#061022] border border-cyan-500/25 flex items-center justify-between shadow-inner">
+      <div className={`p-3.5 rounded-2xl border flex items-center justify-between shadow-inner ${
+        isLight
+          ? 'bg-slate-50 border-slate-200'
+          : 'bg-gradient-to-r from-[#061022] via-[#091836] to-[#061022] border-cyan-500/25'
+      }`}>
         <div className="flex items-center gap-2.5">
           <div className="relative">
             <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
-              isAudioActive ? 'bg-cyan-500/20 text-cyan-300 shadow-[0_0_12px_rgba(6,182,212,0.5)]' : 'bg-slate-800 text-slate-400'
+              isAudioActive
+                ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.5)]'
+                : isLight
+                  ? 'bg-slate-200 text-slate-600'
+                  : 'bg-slate-800 text-slate-400'
             }`}>
               <Headphones className="w-4 h-4" />
             </div>
@@ -127,19 +137,23 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
             )}
           </div>
           <div>
-            <div className="text-xs font-bold text-white flex items-center gap-1.5">
+            <div className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <span>Ambient Sound Engine</span>
               {isAudioActive ? (
-                <span className="text-[10px] px-2 py-0.2 rounded-full bg-cyan-500/20 text-cyan-300 font-mono font-medium">
+                <span className={`text-[10px] px-2 py-0.2 rounded-full font-mono font-medium ${
+                  isLight ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' : 'bg-cyan-500/20 text-cyan-300'
+                }`}>
                   {mode.replace('_', ' ').toUpperCase()}
                 </span>
               ) : (
-                <span className="text-[10px] px-2 py-0.2 rounded-full bg-slate-800 text-slate-400">
+                <span className={`text-[10px] px-2 py-0.2 rounded-full ${
+                  isLight ? 'bg-slate-200 text-slate-600' : 'bg-slate-800 text-slate-400'
+                }`}>
                   MUTED / OFF
                 </span>
               )}
             </div>
-            <div className="text-[10px] text-sky-200/60 font-mono">
+            <div className={`text-[10px] font-mono ${isLight ? 'text-slate-600' : 'text-sky-200/60'}`}>
               {isAudioActive ? 'Live frequency synthesis active' : 'Select a frequency or noise layer below'}
             </div>
           </div>
@@ -180,19 +194,37 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
               }}
               className={`p-2.5 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between ${
                 isSelected
-                  ? 'bg-cyan-500/20 border-cyan-400 text-white shadow-md'
-                  : 'bg-[#061022] border-sky-500/15 hover:border-sky-500/35 text-slate-300'
+                  ? isLight
+                    ? 'bg-cyan-500 border-cyan-500 text-slate-950 font-bold shadow-sm'
+                    : 'bg-cyan-500/20 border-cyan-400 text-white shadow-md'
+                  : isLight
+                    ? 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    : 'bg-[#061022] border-sky-500/15 hover:border-sky-500/35 text-slate-300'
               }`}
             >
               <div className="flex items-center justify-between mb-1">
-                <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-cyan-300' : 'text-slate-400'}`} />
+                <Icon className={`w-3.5 h-3.5 ${
+                  isSelected
+                    ? (isLight ? 'text-slate-950' : 'text-cyan-300')
+                    : (isLight ? 'text-slate-600' : 'text-slate-400')
+                }`} />
                 {isSelected && mode !== 'none' && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                  <span className={`w-1.5 h-1.5 rounded-full animate-ping ${isLight ? 'bg-slate-950' : 'bg-cyan-400'}`} />
                 )}
               </div>
               <div>
-                <div className="font-bold text-xs text-white leading-tight">{item.label}</div>
-                {!compact && <div className="text-[10px] text-sky-200/60 mt-0.5">{item.desc}</div>}
+                <div className={`font-bold text-xs leading-tight ${
+                  isSelected && isLight ? 'text-slate-950' : (isLight ? 'text-slate-900' : 'text-white')
+                }`}>
+                  {item.label}
+                </div>
+                {!compact && (
+                  <div className={`text-[10px] mt-0.5 ${
+                    isSelected && isLight ? 'text-slate-900/80' : (isLight ? 'text-slate-600' : 'text-sky-200/60')
+                  }`}>
+                    {item.desc}
+                  </div>
+                )}
               </div>
             </button>
           );
@@ -200,15 +232,19 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
       </div>
 
       {/* Volume Bar & Mute */}
-      <div className="p-3 rounded-2xl bg-[#061022] border border-sky-500/15 flex items-center gap-3">
+      <div className={`p-3 rounded-2xl border flex items-center gap-3 ${
+        isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
+      }`}>
         <button
           type="button"
           onClick={() => setIsMuted(!isMuted)}
-          className="p-1.5 rounded-xl hover:bg-slate-800 text-cyan-400 cursor-pointer transition"
+          className={`p-1.5 rounded-xl cursor-pointer transition ${
+            isLight ? 'hover:bg-slate-200 text-cyan-700' : 'hover:bg-slate-800 text-cyan-400'
+          }`}
           title={isMuted ? 'Unmute' : 'Mute'}
         >
           {isMuted || volume === 0 ? (
-            <VolumeX className="w-4 h-4 text-rose-400" />
+            <VolumeX className="w-4 h-4 text-rose-500" />
           ) : (
             <Volume2 className="w-4 h-4" />
           )}
@@ -222,27 +258,37 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
             step="0.05"
             value={isMuted ? 0 : volume}
             onChange={(e) => handleVolumeChange(Number(e.target.value))}
-            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+            className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-cyan-500 ${
+              isLight ? 'bg-slate-200' : 'bg-slate-800'
+            }`}
           />
-          <span className="text-[11px] font-mono text-cyan-300 w-9 text-right">
+          <span className={`text-[11px] font-mono w-9 text-right font-bold ${
+            isLight ? 'text-cyan-800' : 'text-cyan-300'
+          }`}>
             {isMuted ? '0%' : `${Math.round(volume * 100)}%`}
           </span>
         </div>
       </div>
 
       {/* Custom Music Inserter (File Upload & URL Stream) */}
-      <div className="p-3.5 rounded-2xl bg-[#061022] border border-sky-500/15 space-y-2.5">
+      <div className={`p-3.5 rounded-2xl border space-y-2.5 ${
+        isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
+      }`}>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-white flex items-center gap-1.5">
-            <Music className="w-3.5 h-3.5 text-cyan-400" />
+          <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <Music className={`w-3.5 h-3.5 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
             Insert Custom Audio / Lo-Fi
           </span>
-          <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-800 text-[10px]">
+          <div className={`flex items-center gap-1 p-0.5 rounded-lg text-[10px] ${
+            isLight ? 'bg-slate-200' : 'bg-slate-800'
+          }`}>
             <button
               type="button"
               onClick={() => setCustomSourceType('url')}
-              className={`px-2 py-0.5 rounded font-medium cursor-pointer ${
-                customSourceType === 'url' ? 'bg-cyan-500 text-white' : 'text-slate-400'
+              className={`px-2 py-0.5 rounded font-bold cursor-pointer transition ${
+                customSourceType === 'url'
+                  ? 'bg-cyan-500 text-slate-950'
+                  : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400'
               }`}
             >
               Stream URL
@@ -250,8 +296,10 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
             <button
               type="button"
               onClick={() => setCustomSourceType('file')}
-              className={`px-2 py-0.5 rounded font-medium cursor-pointer ${
-                customSourceType === 'file' ? 'bg-cyan-500 text-white' : 'text-slate-400'
+              className={`px-2 py-0.5 rounded font-bold cursor-pointer transition ${
+                customSourceType === 'file'
+                  ? 'bg-cyan-500 text-slate-950'
+                  : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400'
               }`}
             >
               Upload MP3
@@ -270,13 +318,17 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
             />
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="border-2 border-dashed border-sky-500/20 hover:border-cyan-400/50 rounded-xl p-3 text-center cursor-pointer transition bg-[#040c1a]/50"
+              className={`border-2 border-dashed rounded-xl p-3 text-center cursor-pointer transition ${
+                isLight
+                  ? 'border-slate-300 bg-white hover:border-cyan-500 text-slate-900'
+                  : 'border-sky-500/20 hover:border-cyan-400/50 bg-[#040c1a]/50 text-white'
+              }`}
             >
-              <Upload className="w-5 h-5 text-cyan-400 mx-auto mb-1" />
-              <div className="text-xs font-semibold text-white">
-                {customFileName ? customFileName : 'Click to select audio file from your PC'}
+              <Upload className={`w-5 h-5 mx-auto mb-1 ${isLight ? 'text-cyan-600' : 'text-cyan-400'}`} />
+              <div className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                {customFileName ? customFileName : 'Click to select audio file from your device'}
               </div>
-              <div className="text-[10px] text-slate-400 mt-0.5">
+              <div className={`text-[10px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 Supports MP3, WAV, AAC, OGG (private local audio loop)
               </div>
             </div>
@@ -284,27 +336,31 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
         ) : (
           <form onSubmit={handleLoadCustomUrl} className="flex gap-2">
             <div className="relative flex-1">
-              <Link className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-2.5" />
+              <Link className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
               <input
                 type="text"
                 value={customUrl}
                 onChange={(e) => setCustomUrl(e.target.value)}
                 placeholder="https://example.com/stream.mp3 or Lo-Fi stream"
-                className="w-full pl-8 pr-3 py-2 rounded-xl bg-[#030914] border border-sky-500/20 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                className={`w-full pl-8 pr-3 py-2 rounded-xl text-xs focus:outline-none focus:border-cyan-400 ${
+                  isLight
+                    ? 'bg-white border border-slate-300 text-slate-900 placeholder-slate-400'
+                    : 'bg-[#030914] border border-sky-500/20 text-white placeholder-slate-500'
+                }`}
               />
             </div>
             <button
               type="submit"
-              className="px-3 py-2 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs flex items-center gap-1 transition cursor-pointer"
+              className="px-3 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1 transition cursor-pointer shadow-sm"
             >
-              <Play className="w-3 h-3 fill-white" />
+              <Play className="w-3 h-3 fill-slate-950" />
               Play
             </button>
           </form>
         )}
 
         {errorMessage && (
-          <div className="flex items-center gap-1.5 text-[11px] text-rose-400 bg-rose-950/20 p-2 rounded-lg border border-rose-500/20">
+          <div className="flex items-center gap-1.5 text-[11px] text-rose-500 bg-rose-50 p-2 rounded-lg border border-rose-200 font-medium">
             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
             {errorMessage}
           </div>

@@ -96,6 +96,15 @@ export interface AntiCheatRecord {
   taskName: string;
 }
 
+export type ThemeMode = 'dark' | 'light';
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: string;
+}
+
 export interface AppSettings {
   focusDurationMinutes: number;
   shortBreakMinutes: number;
@@ -106,6 +115,7 @@ export interface AppSettings {
   notificationsEnabled: boolean;
   strictBlockerMode: boolean;
   strictAntiCheatMode: boolean;
+  themeMode?: ThemeMode;
 }
 
 export interface MilestoneAlert {

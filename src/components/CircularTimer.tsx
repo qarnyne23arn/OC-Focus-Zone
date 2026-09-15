@@ -13,6 +13,7 @@ interface CircularTimerProps {
   isExpanded?: boolean;
   onToggleExpand?: () => void;
   onEnterZenMode?: () => void;
+  isLight?: boolean;
 }
 
 export const CircularTimer: React.FC<CircularTimerProps> = ({
@@ -26,6 +27,7 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
   isExpanded = false,
   onToggleExpand,
   onEnterZenMode,
+  isLight = false,
 }) => {
   const [isEditingTime, setIsEditingTime] = useState(false);
   const currentMinutes = Math.floor(remainingSeconds / 60);
@@ -409,29 +411,38 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
 
       {/* Quick Time Selector Bar below dial (accessible on desktop) */}
       {!isRunning && !isEditingTime && (
-        <div className="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
-          <span className="text-[10px] text-sky-400/80">Quick Set:</span>
-          {[25, 45, 60].map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => onSetCustomDuration(m)}
-              className={`px-2 py-0.5 rounded-full text-[10px] font-medium transition cursor-pointer ${
-                Math.floor(totalSeconds / 60) === m
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
-                  : 'bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white'
-              }`}
-            >
-              {m}m
-            </button>
-          ))}
+        <div className={`mt-1 flex items-center gap-1 text-[11px] ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
+          <span className={`text-[10px] font-bold ${isLight ? 'text-cyan-700' : 'text-sky-400/80'}`}>Quick Set:</span>
+          {[25, 45, 60].map((m) => {
+            const isSelected = Math.floor(totalSeconds / 60) === m;
+            return (
+              <button
+                key={m}
+                type="button"
+                onClick={() => onSetCustomDuration(m)}
+                className={`px-2 py-0.5 rounded-full text-[10px] transition cursor-pointer ${
+                  isSelected
+                    ? isLight
+                      ? 'bg-cyan-500 text-slate-950 font-black shadow-sm'
+                      : 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold'
+                    : isLight
+                      ? 'bg-slate-200/90 hover:bg-slate-300 text-slate-700 font-semibold'
+                      : 'bg-slate-800/60 hover:bg-slate-800 text-slate-400 hover:text-white'
+                }`}
+              >
+                {m}m
+              </button>
+            );
+          })}
           <button
             type="button"
             onClick={() => {
               setInputMinutes(Math.floor(totalSeconds / 60));
               setIsEditingTime(true);
             }}
-            className="text-cyan-400 hover:underline text-[10px] cursor-pointer ml-1"
+            className={`text-[10px] cursor-pointer ml-1 font-semibold hover:underline ${
+              isLight ? 'text-cyan-700' : 'text-cyan-400'
+            }`}
           >
             Custom...
           </button>
@@ -444,17 +455,21 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
           <button
             type="button"
             onClick={onToggleExpand}
-            className="px-2.5 py-1 rounded-xl bg-[#081836] hover:bg-[#0c2452] border border-sky-500/20 hover:border-cyan-400/50 text-[11px] font-semibold text-cyan-300 flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+            className={`px-2.5 py-1 rounded-xl border text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-sm ${
+              isLight
+                ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800'
+                : 'bg-[#081836] hover:bg-[#0c2452] border-sky-500/20 hover:border-cyan-400/50 text-cyan-300'
+            }`}
             title={isExpanded ? "Restore clock to normal size" : "Expand clock to enlarged view"}
           >
             {isExpanded ? (
               <>
-                <Minimize2 className="w-3.5 h-3.5 text-cyan-400" />
+                <Minimize2 className={`w-3.5 h-3.5 ${isLight ? 'text-slate-700' : 'text-cyan-400'}`} />
                 <span>Restore Size</span>
               </>
             ) : (
               <>
-                <Maximize2 className="w-3.5 h-3.5 text-cyan-400" />
+                <Maximize2 className={`w-3.5 h-3.5 ${isLight ? 'text-slate-700' : 'text-cyan-400'}`} />
                 <span>Expand Clock</span>
               </>
             )}
@@ -465,10 +480,14 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
           <button
             type="button"
             onClick={onEnterZenMode}
-            className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-sky-900/60 to-cyan-900/60 hover:from-sky-800 hover:to-cyan-800 border border-cyan-500/30 text-[11px] font-semibold text-cyan-200 flex items-center gap-1.5 transition cursor-pointer shadow-sm"
+            className={`px-2.5 py-1 rounded-xl border text-[11px] font-semibold flex items-center gap-1.5 transition cursor-pointer shadow-sm ${
+              isLight
+                ? 'bg-cyan-50 hover:bg-cyan-100 border-cyan-300 text-cyan-800'
+                : 'bg-gradient-to-r from-sky-900/60 to-cyan-900/60 hover:from-sky-800 hover:to-cyan-800 border-cyan-500/30 text-cyan-200'
+            }`}
             title="Open Ambient Fullscreen Zen Sanctuary"
           >
-            <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
+            <Sparkles className={`w-3.5 h-3.5 ${isLight ? 'text-cyan-600' : 'text-cyan-300'}`} />
             <span>Zen Sanctuary</span>
           </button>
         )}

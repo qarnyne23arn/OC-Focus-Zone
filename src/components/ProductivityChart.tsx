@@ -7,12 +7,14 @@ interface ProductivityChartProps {
   sessions: StudySession[];
   activeDateFilter: 'Today' | 'Yesterday' | 'This Week';
   onAddQuickSession?: (minutes: number, hour: number) => void;
+  isLight?: boolean;
 }
 
 export const ProductivityChart: React.FC<ProductivityChartProps> = ({
   sessions,
   activeDateFilter,
   onAddQuickSession,
+  isLight = false,
 }) => {
   // Selected hour for interactive inspection (defaults to 14 like in the reference image)
   const [selectedHour, setSelectedHour] = useState<number>(14);
@@ -110,31 +112,45 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
   return (
     <div className="w-full mt-2 relative select-none space-y-3" id="productivity-trend-chart">
       {/* Top Banner with Peak Hour & Total */}
-      <div className="p-3 rounded-2xl bg-gradient-to-r from-[#08152e] via-[#0b1d3d] to-[#08152e] border border-cyan-500/25 flex flex-wrap items-center justify-between gap-2 shadow-sm">
+      <div className={`p-3 rounded-2xl border flex flex-wrap items-center justify-between gap-2 shadow-sm ${
+        isLight
+          ? 'bg-slate-50 border-slate-200'
+          : 'bg-gradient-to-r from-[#08152e] via-[#0b1d3d] to-[#08152e] border-cyan-500/25'
+      }`}>
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-300 flex items-center justify-center border border-cyan-400/30">
-            <Flame className="w-4 h-4 text-amber-400 fill-amber-400/20" />
+          <div className="w-8 h-8 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center border border-cyan-400/30">
+            <Flame className="w-4 h-4 text-cyan-400 fill-cyan-400/20" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-extrabold text-white">Peak Hour: {peakItem.hour}:00</span>
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono font-bold">
+              <span className={`text-xs font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                Peak Hour: {peakItem.hour}:00
+              </span>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-mono font-bold ${
+                isLight ? 'bg-cyan-100 text-cyan-800 border border-cyan-200' : 'bg-cyan-500/20 text-cyan-300'
+              }`}>
                 {peakItem.minutes}m Flow
               </span>
             </div>
-            <p className="text-[10px] text-sky-200/60">
+            <p className={`text-[10px] ${isLight ? 'text-slate-600' : 'text-sky-200/60'}`}>
               {activeDateFilter}: {Math.floor(totalStudyMinutes / 60)}h {totalStudyMinutes % 60}m recorded across {filteredSessions.length} sessions
             </p>
           </div>
         </div>
 
         {/* Span toggle */}
-        <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-900/80 border border-slate-700/60 text-[10px]">
+        <div className={`flex items-center gap-1 p-0.5 rounded-xl border text-[10px] ${
+          isLight ? 'bg-slate-200/80 border-slate-300' : 'bg-slate-900/80 border-slate-700/60'
+        }`}>
           <button
             type="button"
             onClick={() => setTimeSpanMode('core')}
             className={`px-2 py-0.5 rounded-lg font-bold cursor-pointer transition ${
-              timeSpanMode === 'core' ? 'bg-cyan-500 text-white shadow' : 'text-slate-400 hover:text-white'
+              timeSpanMode === 'core'
+                ? 'bg-cyan-500 text-slate-950 shadow font-extrabold'
+                : isLight
+                  ? 'text-slate-600 hover:text-slate-900'
+                  : 'text-slate-400 hover:text-white'
             }`}
           >
             Core (11-16)
@@ -143,7 +159,11 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
             type="button"
             onClick={() => setTimeSpanMode('full')}
             className={`px-2 py-0.5 rounded-lg font-bold cursor-pointer transition ${
-              timeSpanMode === 'full' ? 'bg-cyan-500 text-white shadow' : 'text-slate-400 hover:text-white'
+              timeSpanMode === 'full'
+                ? 'bg-cyan-500 text-slate-950 shadow font-extrabold'
+                : isLight
+                  ? 'text-slate-600 hover:text-slate-900'
+                  : 'text-slate-400 hover:text-white'
             }`}
           >
             Full Day
@@ -152,17 +172,23 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
       </div>
 
       {/* Header Info Tooltip with live reactive values */}
-      <div className="flex items-center justify-between px-2 text-[11px] text-sky-200/90">
-        <span className="flex items-center gap-1.5 font-medium">
+      <div className={`flex items-center justify-between px-2 text-[11px] ${
+        isLight ? 'text-slate-800' : 'text-sky-200/90'
+      }`}>
+        <span className="flex items-center gap-1.5 font-semibold">
           <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(56,189,248,0.8)]" />
           <span>Productivity Wave Timeline</span>
         </span>
         <div className="flex items-center gap-2">
-          <span className="font-extrabold text-cyan-300 font-mono text-xs bg-cyan-950/60 px-2 py-0.5 rounded-lg border border-cyan-500/30">
+          <span className={`font-extrabold font-mono text-xs px-2 py-0.5 rounded-lg border ${
+            isLight
+              ? 'text-cyan-900 bg-cyan-100 border-cyan-300'
+              : 'text-cyan-300 bg-cyan-950/60 border-cyan-500/30'
+          }`}>
             {activePoint.hour}:00 — {activePoint.minutes} min
           </span>
           {activePoint.count > 0 && (
-            <span className="text-[10px] text-sky-300/80 font-normal">
+            <span className={`text-[10px] font-medium ${isLight ? 'text-slate-500' : 'text-sky-300/80'}`}>
               ({activePoint.count} {activePoint.count === 1 ? 'block' : 'blocks'})
             </span>
           )}
@@ -170,7 +196,9 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
       </div>
 
       {/* Interactive SVG Chart Area with Enhanced Cyan-Cobalt Glow Wave */}
-      <div className="relative w-full h-[145px] overflow-hidden rounded-2xl bg-gradient-to-b from-[#071329]/90 to-[#030917]/90 border border-sky-500/20 p-1 shadow-inner">
+      <div className={`relative w-full h-[145px] overflow-hidden rounded-2xl border p-1 shadow-inner ${
+        isLight ? 'bg-slate-50 border-slate-200' : 'bg-gradient-to-b from-[#071329]/90 to-[#030917]/90 border-sky-500/20'
+      }`}>
         <svg
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="none"
@@ -274,7 +302,7 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
             y1={bottomY}
             x2={width - paddingX}
             y2={bottomY}
-            stroke="#1d3d6e"
+            stroke={isLight ? '#cbd5e1' : '#1d3d6e'}
             strokeWidth="1.2"
           />
 
@@ -304,7 +332,7 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
                   y1={bottomY}
                   x2={p.x}
                   y2={bottomY + 4}
-                  stroke={isSelected ? '#38bdf8' : '#334155'}
+                  stroke={isSelected ? '#0ea5e9' : (isLight ? '#94a3b8' : '#334155')}
                   strokeWidth={isSelected ? '2' : '1.2'}
                 />
 
@@ -313,7 +341,7 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
                   x={p.x}
                   y={bottomY + 16}
                   textAnchor="middle"
-                  fill={isSelected ? '#ffffff' : '#64748b'}
+                  fill={isSelected ? (isLight ? '#0f172a' : '#ffffff') : (isLight ? '#475569' : '#64748b')}
                   fontSize="11"
                   fontWeight={isSelected ? '800' : '600'}
                   fontFamily="Plus Jakarta Sans, sans-serif"
@@ -337,15 +365,29 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
               onClick={() => setSelectedHour(item.hour)}
               className={`p-2 rounded-xl text-center border transition cursor-pointer flex flex-col items-center justify-between ${
                 isSelected
-                  ? 'bg-cyan-500/20 border-cyan-400 text-white shadow-md'
-                  : 'bg-[#061022] border-sky-500/15 hover:border-sky-500/35 text-slate-300'
+                  ? isLight
+                    ? 'bg-cyan-500 border-cyan-500 text-slate-950 font-black shadow-sm'
+                    : 'bg-cyan-500/20 border-cyan-400 text-white shadow-md'
+                  : isLight
+                    ? 'bg-white border-slate-200 hover:border-slate-300 text-slate-800'
+                    : 'bg-[#061022] border-sky-500/15 hover:border-sky-500/35 text-slate-300'
               }`}
             >
-              <span className="text-[10px] font-mono text-slate-400 font-bold">{item.hour}:00</span>
-              <span className="text-xs font-black text-cyan-300 my-0.5">{item.minutes}m</span>
-              <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden">
+              <span className={`text-[10px] font-mono font-bold ${
+                isSelected && isLight ? 'text-slate-950' : (isLight ? 'text-slate-600' : 'text-slate-400')
+              }`}>
+                {item.hour}:00
+              </span>
+              <span className={`text-xs font-black my-0.5 ${
+                isSelected && isLight ? 'text-slate-950' : (isLight ? 'text-cyan-700' : 'text-cyan-300')
+              }`}>
+                {item.minutes}m
+              </span>
+              <div className={`w-full h-1 rounded-full overflow-hidden ${
+                isSelected && isLight ? 'bg-slate-900/20' : (isLight ? 'bg-slate-200' : 'bg-slate-800')
+              }`}>
                 <div 
-                  className="bg-cyan-400 h-full rounded-full"
+                  className={`h-full rounded-full ${isSelected && isLight ? 'bg-slate-950' : 'bg-cyan-400'}`}
                   style={{ width: `${Math.min(100, Math.round((item.minutes / maxMinutes) * 100))}%` }}
                 />
               </div>
@@ -355,11 +397,15 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
       </div>
 
       {/* Mini details badge below chart */}
-      <div className="flex items-center justify-between text-[11px] text-slate-400 px-1 pt-1 border-t border-sky-500/10">
-        <span className="truncate max-w-[220px] text-sky-200/80 font-medium">
+      <div className={`flex items-center justify-between text-[11px] px-1 pt-1 border-t ${
+        isLight ? 'text-slate-600 border-slate-200' : 'text-slate-400 border-sky-500/10'
+      }`}>
+        <span className={`truncate max-w-[220px] font-medium ${
+          isLight ? 'text-slate-800' : 'text-sky-200/80'
+        }`}>
           Subjects: {activePoint.subjects.join(', ')}
         </span>
-        <span className="text-cyan-400 font-mono text-[10px]">
+        <span className={`font-mono text-[10px] ${isLight ? 'text-cyan-700 font-semibold' : 'text-cyan-400'}`}>
           Click any hour point or chip to inspect
         </span>
       </div>

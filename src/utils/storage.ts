@@ -43,12 +43,7 @@ export const FOCUS_PROTOCOLS: FocusProtocol[] = [
   },
 ];
 
-export const DEFAULT_TASKS: TaskItem[] = [
-  { id: 'task-1', name: 'Algorithms & Data Structures', completed: false, pomodorosLogged: 3, pomodorosTarget: 4, subject: 'Computer Science' },
-  { id: 'task-2', name: 'Distributed Systems Architecture', completed: false, pomodorosLogged: 1, pomodorosTarget: 3, subject: 'Systems Engineering' },
-  { id: 'task-3', name: 'Machine Learning Model Tuning', completed: true, pomodorosLogged: 2, pomodorosTarget: 2, subject: 'AI Research' },
-  { id: 'task-4', name: 'Discrete Mathematics Proofs', completed: false, pomodorosLogged: 0, pomodorosTarget: 2, subject: 'Mathematics' },
-];
+export const DEFAULT_TASKS: TaskItem[] = [];
 
 export const DEFAULT_BLOCKED_SITES: BlockedWebsite[] = [
   { id: '1', domain: 'youtube.com', name: 'YouTube', category: 'video', enabled: true },
@@ -71,6 +66,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   notificationsEnabled: true,
   strictBlockerMode: true,
   strictAntiCheatMode: true,
+  themeMode: 'dark',
 };
 
 const STORAGE_KEY_REFLECTIONS = 'oc_focus_reflections_v1';
@@ -103,6 +99,8 @@ export function performSystemReset(): void {
     localStorage.removeItem('focus_time_settings_v1');
     localStorage.removeItem(STORAGE_KEY_BLOCKED);
     localStorage.removeItem(STORAGE_KEY_TASKS);
+    localStorage.removeItem(STORAGE_KEY_ACTIVE_TASK);
+    localStorage.removeItem(STORAGE_KEY_MINI_DOCK_HIDDEN);
     localStorage.removeItem(STORAGE_KEY_SYNC_CODE);
     localStorage.removeItem(STORAGE_KEY_SNAPSHOT);
     localStorage.removeItem(STORAGE_KEY_OFFLINE_QUEUE);
@@ -133,13 +131,56 @@ const STORAGE_KEY_SYNC_CODE = 'focus_time_sync_code_v1';
 const STORAGE_KEY_SNAPSHOT = 'focus_time_snapshot_v1';
 const STORAGE_KEY_OFFLINE_QUEUE = 'focus_time_offline_queue_v1';
 const STORAGE_KEY_TASKS = 'focus_time_tasks_v1';
+const STORAGE_KEY_ACTIVE_TASK = 'focus_time_active_task_name_v2';
+const STORAGE_KEY_MINI_DOCK_HIDDEN = 'focus_time_mini_dock_hidden_v2';
+
+export function loadLocalFloatingDockHidden(): boolean {
+  try {
+    return localStorage.getItem(STORAGE_KEY_MINI_DOCK_HIDDEN) === 'true';
+  } catch {
+    return false;
+  }
+}
+
+export function saveLocalFloatingDockHidden(hidden: boolean): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_MINI_DOCK_HIDDEN, hidden ? 'true' : 'false');
+  } catch {
+    // Ignore
+  }
+}
+
+export function loadLocalActiveTask(): string {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_ACTIVE_TASK);
+    return raw !== null ? raw : '';
+  } catch {
+    return '';
+  }
+}
+
+export function saveLocalActiveTask(taskName: string): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_ACTIVE_TASK, taskName);
+  } catch {
+    // Ignore
+  }
+}
 
 export function loadLocalTasks(): TaskItem[] {
   try {
+    // Clean out previous pre-seeded tasks if they contain old defaults
     const raw = localStorage.getItem(STORAGE_KEY_TASKS);
-    return raw ? JSON.parse(raw) : DEFAULT_TASKS;
+    if (!raw) return [];
+    const parsed: TaskItem[] = JSON.parse(raw);
+    // If the saved tasks were just the old pre-entered items, reset to empty
+    if (parsed.length > 0 && parsed.some(t => t.name === 'Algorithms & Data Structures' || t.name === 'Distributed Systems Architecture')) {
+      saveLocalTasks([]);
+      return [];
+    }
+    return parsed;
   } catch {
-    return DEFAULT_TASKS;
+    return [];
   }
 }
 

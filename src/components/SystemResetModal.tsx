@@ -39,8 +39,8 @@ export const SystemResetModal: React.FC<SystemResetModalProps> = ({
         </div>
 
         <ul className="text-xs text-slate-300 space-y-1.5 list-disc list-inside bg-[#060a14] p-3 rounded-2xl border border-slate-800">
-          <li>Reset timer to 47:00 initial study standard</li>
-          <li>Restore default academic task checklist</li>
+          <li>Reset timer to 45:00 study standard</li>
+          <li>Clear task checklist and active task</li>
           <li>Clear local study session cache & reflections</li>
           <li>Reset anti-cheat records & distraction blocker</li>
         </ul>

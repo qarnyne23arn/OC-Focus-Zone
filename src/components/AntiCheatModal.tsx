@@ -59,7 +59,7 @@ export const AntiCheatModal: React.FC<AntiCheatModalProps> = ({
           <Target className="w-4 h-4 text-cyan-400 shrink-0" />
           <div className="truncate">
             <span className="text-slate-400">Enter Task: </span>
-            <span className="font-bold text-white">{currentTaskName}</span>
+            <span className="font-bold text-white">{currentTaskName || 'No task active'}</span>
           </div>
         </div>
 

@@ -67,6 +67,19 @@ export const ZenSanctuaryModal: React.FC<ZenSanctuaryModalProps> = ({
         }`} 
       />
 
+      {/* Subtle Brand & Logo (Top Left) */}
+      <div className="fixed top-5 left-5 z-20 flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-[#081836]/60 border border-amber-500/25 backdrop-blur-md shadow-sm">
+        <div className="w-5 h-5 rounded-md overflow-hidden bg-black flex items-center justify-center">
+          <img
+            src="/sandclock.svg"
+            alt="OC Sand Clock Logo"
+            referrerPolicy="no-referrer"
+            className="w-full h-full object-contain filter drop-shadow-[0_0_6px_rgba(245,158,11,0.6)]"
+          />
+        </div>
+        <span className="text-xs font-bold tracking-wider text-amber-200/90 font-['Plus_Jakarta_Sans']">OC</span>
+      </div>
+
       {/* Subtle Exit / Minimize Button (Top Right) */}
       <button
         type="button"
@@ -81,11 +94,17 @@ export const ZenSanctuaryModal: React.FC<ZenSanctuaryModalProps> = ({
       {/* EXACT Center Piece from image.png: Only the Task pill, the clock, and the 3 action buttons */}
       <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-xl my-auto">
         
-        {/* 1. Top Pill: [ 📖 Enter Task: Active Task ] */}
+        {/* 1. Top Pill: [ 📖 Enter Task ] */}
         <div className="mb-6 flex items-center gap-2 px-5 py-2 rounded-full bg-[#081836]/90 border border-cyan-500/30 backdrop-blur-md text-xs sm:text-sm text-cyan-200 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
           <BookOpen className="w-4 h-4 text-cyan-400" />
-          <span className="text-slate-400 font-normal">Enter Task:</span>
-          <span className="font-extrabold text-white tracking-wide">{activeTaskName}</span>
+          {activeTaskName ? (
+            <>
+              <span className="text-slate-400 font-normal">Enter Task:</span>
+              <span className="font-extrabold text-white tracking-wide">{activeTaskName}</span>
+            </>
+          ) : (
+            <span className="font-bold text-cyan-200 tracking-wide">Enter Task</span>
+          )}
         </div>
 
         {/* 2. Centerpiece Clock Dial from image.png */}

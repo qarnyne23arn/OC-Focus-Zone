@@ -27,7 +27,16 @@ import {
   AlertOctagon,
   Headphones,
   Zap,
-  Tag
+  Tag,
+  Eye,
+  X,
+  Sun,
+  Moon,
+  Settings as SettingsIcon,
+  User as UserIcon,
+  LogIn as LogInIcon,
+  LogOut as LogOutIcon,
+  RefreshCw
 } from 'lucide-react';
 import { 
   TimerMode, 
@@ -37,7 +46,11 @@ import {
   CloudSyncState,
   MilestoneAlert,
   TaskItem,
-  SessionReflection
+  SessionReflection,
+  UserProfile,
+  ThemeMode,
+  FocusProtocol,
+  AppSettings
 } from './types';
 import { 
   loadLocalSessions, 
@@ -62,7 +75,11 @@ import {
   DEFAULT_SETTINGS,
   loadLocalReflections,
   saveLocalReflections,
-  performSystemReset
+  performSystemReset,
+  loadLocalActiveTask,
+  saveLocalActiveTask,
+  loadLocalFloatingDockHidden,
+  saveLocalFloatingDockHidden
 } from './utils/storage';
 import { 
   playStartChime, 
@@ -87,7 +104,17 @@ import { SystemResetModal } from './components/SystemResetModal';
 import { ZenSanctuaryModal } from './components/ZenSanctuaryModal';
 import { MiniFloatingTimer } from './components/MiniFloatingTimer';
 import { FocusProtocolsCard } from './components/FocusProtocolsCard';
-import { FocusProtocol } from './types';
+import { SystemInitiateSplash } from './components/SystemInitiateSplash';
+import { AuthModal } from './components/AuthModal';
+import { SettingsModal } from './components/SettingsModal';
+import { 
+  loadStoredAuth, 
+  saveStoredAuth, 
+  clearStoredAuth, 
+  isGuestDismissed, 
+  apiPushUserSync, 
+  apiPullUserSync 
+} from './utils/auth';
 
 export default function App() {
   // Persistence state
@@ -97,10 +124,13 @@ export default function App() {
   const [tasks, setTasks] = useState<TaskItem[]>(loadLocalTasks);
   const [syncCode, setSyncCode] = useState<string>(loadSyncCode);
 
-  // Active task name (explicitly requested: Algorithms & Data Structures -> editable)
-  const [activeTaskName, setActiveTaskName] = useState<string>('Algorithms & Data Structures');
+  // System Initiation Splash Screen state (shows user logo for ~1s on startup then enters main app)
+  const [isInitiating, setIsInitiating] = useState<boolean>(true);
+
+  // Active task name (user enters task name by themselves; defaults to empty)
+  const [activeTaskName, setActiveTaskName] = useState<string>(loadLocalActiveTask);
   const [isEditingTaskInline, setIsEditingTaskInline] = useState<boolean>(false);
-  const [tempTaskName, setTempTaskName] = useState<string>('Algorithms & Data Structures');
+  const [tempTaskName, setTempTaskName] = useState<string>(loadLocalActiveTask);
 
   // Timer state
   const [mode, setMode] = useState<TimerMode>('focus');
@@ -134,9 +164,24 @@ export default function App() {
   const [totalViolationsCount, setTotalViolationsCount] = useState<number>(0);
   const strayStartTimeRef = useRef<number | null>(null);
 
+  // Floating Mini Timer Dock Hide & Undo State
+  const [isFloatingDockHidden, setIsFloatingDockHidden] = useState<boolean>(loadLocalFloatingDockHidden);
+  const [showHideUndoToast, setShowHideUndoToast] = useState<boolean>(false);
+  const [lastExtensionMinutes, setLastExtensionMinutes] = useState<number | null>(null);
+  const hideToastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const undoExtendTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Stats & Distraction counters
   const [distractionCount, setDistractionCount] = useState<number>(14);
   const [alerts, setAlerts] = useState<MilestoneAlert[]>([]);
+
+  // User Authentication & Multi-Device Auto Sync State
+  const [authData, setAuthData] = useState<{ user: UserProfile | null; token: string | null }>(loadStoredAuth);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
+  const [authModalInitialMode, setAuthModalInitialMode] = useState<'login' | 'signup'>('signup');
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+  const [lastAccountSyncedAt, setLastAccountSyncedAt] = useState<string | null>(null);
+  const [isAccountSyncing, setIsAccountSyncing] = useState<boolean>(false);
   const [savedSnapshot, setSavedSnapshot] = useState<SessionSnapshot | null>(loadSessionSnapshot);
 
   // Cloud Sync & Offline State
@@ -186,6 +231,10 @@ export default function App() {
   useEffect(() => {
     saveLocalTasks(tasks);
   }, [tasks]);
+
+  useEffect(() => {
+    saveLocalActiveTask(activeTaskName);
+  }, [activeTaskName]);
 
   // Online / Offline listener
   useEffect(() => {
@@ -282,6 +331,148 @@ export default function App() {
       window.removeEventListener('focus', handleWindowFocus);
     };
   }, [strictAntiCheatMode, isRunning, mode, addAlert]);
+
+  // Persist settings locally
+  useEffect(() => {
+    saveLocalSettings(settings);
+  }, [settings]);
+
+  // Sync theme mode to document.documentElement
+  useEffect(() => {
+    if (settings.themeMode === 'light') {
+      document.documentElement.classList.remove('dark');
+      document.documentElement.classList.add('light');
+    } else {
+      document.documentElement.classList.remove('light');
+      document.documentElement.classList.add('dark');
+    }
+  }, [settings.themeMode]);
+
+  // Pull Account Data for Multi-Device Auto-Sync
+  const pullAccountSync = useCallback(async (token: string, silent = true) => {
+    try {
+      setIsAccountSyncing(true);
+      const res = await apiPullUserSync(token);
+      if (res.exists && res.data) {
+        if (res.data.sessions) setSessions(res.data.sessions);
+        if (res.data.settings) setSettings(res.data.settings);
+        if (res.data.blockedSites) setBlockedSites(res.data.blockedSites);
+        if (res.data.tasks) setTasks(res.data.tasks);
+        if (res.data.activeTaskName !== undefined) setActiveTaskName(res.data.activeTaskName);
+        if (res.updatedAt) setLastAccountSyncedAt(res.updatedAt);
+        if (!silent) {
+          addAlert('Account Synced', 'Updated with latest state from other devices.', 'milestone');
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to auto-sync account workspace', err);
+    } finally {
+      setIsAccountSyncing(false);
+    }
+  }, [addAlert]);
+
+  // Initial Pull when signed in
+  useEffect(() => {
+    if (authData.token) {
+      pullAccountSync(authData.token, true);
+    }
+  }, [authData.token, pullAccountSync]);
+
+  // Debounced Push to Server on State Changes for Multi-Device Auto-Sync
+  useEffect(() => {
+    if (!authData.token) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await apiPushUserSync(authData.token!, {
+          sessions,
+          settings,
+          blockedSites,
+          tasks,
+          activeTaskName,
+        });
+        setLastAccountSyncedAt(res.updatedAt);
+      } catch (err) {
+        console.warn('Auto sync push failed', err);
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [sessions, settings, blockedSites, tasks, activeTaskName, authData.token]);
+
+  // Background Auto-Sync Poller (every 20 seconds and on window focus for cross-device live updates)
+  useEffect(() => {
+    if (!authData.token) return;
+
+    const interval = setInterval(() => {
+      pullAccountSync(authData.token!, true);
+    }, 20000);
+
+    const onFocus = () => {
+      pullAccountSync(authData.token!, true);
+    };
+
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+    };
+  }, [authData.token, pullAccountSync]);
+
+  // Manual Trigger Sync for Current Account
+  const handleTriggerAccountSync = async () => {
+    if (!authData.token) {
+      addAlert('Guest Mode', 'Sign in or create an account to auto-sync across devices.', 'milestone');
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    try {
+      setIsAccountSyncing(true);
+      const pushRes = await apiPushUserSync(authData.token, {
+        sessions,
+        settings,
+        blockedSites,
+        tasks,
+        activeTaskName,
+      });
+      setLastAccountSyncedAt(pushRes.updatedAt);
+      await pullAccountSync(authData.token, false);
+      addAlert('Account Synced', 'Workspace is synchronized with all devices in real-time.', 'milestone');
+    } catch {
+      addAlert('Sync Error', 'Failed to reach synchronization service.', 'milestone');
+    } finally {
+      setIsAccountSyncing(false);
+    }
+  };
+
+  // Sign out handler
+  const handleSignOut = () => {
+    clearStoredAuth();
+    setAuthData({ user: null, token: null });
+    setIsSettingsModalOpen(false);
+    addAlert('Signed Out', 'You are now in guest mode. Data remains stored locally.', 'milestone');
+  };
+
+  // Theme Mode Toggle
+  const toggleThemeMode = () => {
+    const nextTheme: ThemeMode = settings.themeMode === 'light' ? 'dark' : 'light';
+    const updatedSettings: AppSettings = { ...settings, themeMode: nextTheme };
+    setSettings(updatedSettings);
+    saveLocalSettings(updatedSettings);
+    addAlert('Theme Changed', `Switched to ${nextTheme === 'light' ? 'Day Mode (Light)' : 'Night Mode (Dark)'}`, 'milestone');
+  };
+
+  // Splash Screen completion handler
+  const handleInitiateComplete = () => {
+    setIsInitiating(false);
+    // For first-time users (not logged in and haven't explicitly dismissed guest mode), show login/signup modal
+    if (!authData.user && !isGuestDismissed()) {
+      setAuthModalInitialMode('signup');
+      setIsAuthModalOpen(true);
+    }
+  };
 
   // Flush offline queue to server
   const flushOfflineQueue = useCallback(async () => {
@@ -555,16 +746,63 @@ export default function App() {
     setRemainingSeconds(secs);
   };
 
-  // Extend Mode (+5m, +10m, +15m)
+  // Extend Mode (+5m, +10m, +15m) with Undo capability
   const handleExtend = (extraMinutes: number) => {
     playMilestoneChime();
     const addSecs = extraMinutes * 60;
     setTotalSeconds((prev) => prev + addSecs);
     setRemainingSeconds((prev) => prev + addSecs);
+    setLastExtensionMinutes(extraMinutes);
+    if (undoExtendTimerRef.current) clearTimeout(undoExtendTimerRef.current);
+    undoExtendTimerRef.current = setTimeout(() => {
+      setLastExtensionMinutes(null);
+    }, 20000);
     addAlert(
       '⚡ Flow State Extended',
       `Added +${extraMinutes} minutes to your active session. Keep focused!`,
       'milestone'
+    );
+  };
+
+  // Undo Extension
+  const handleUndoExtend = () => {
+    if (!lastExtensionMinutes) return;
+    playToggleTick();
+    const removeSecs = lastExtensionMinutes * 60;
+    setTotalSeconds((prev) => Math.max(60, prev - removeSecs));
+    setRemainingSeconds((prev) => Math.max(1, prev - removeSecs));
+    const undone = lastExtensionMinutes;
+    setLastExtensionMinutes(null);
+    if (undoExtendTimerRef.current) clearTimeout(undoExtendTimerRef.current);
+    addAlert(
+      '↩ Extension Reverted',
+      `Reverted +${undone} minutes from your session timer.`,
+      'system'
+    );
+  };
+
+  // Floating Mini Timer Dock Hide & Undo Handlers
+  const handleHideFloatingDock = () => {
+    playToggleTick();
+    setIsFloatingDockHidden(true);
+    saveLocalFloatingDockHidden(true);
+    setShowHideUndoToast(true);
+    if (hideToastTimerRef.current) clearTimeout(hideToastTimerRef.current);
+    hideToastTimerRef.current = setTimeout(() => {
+      setShowHideUndoToast(false);
+    }, 8000);
+  };
+
+  const handleUndoHideFloatingDock = () => {
+    playToggleTick();
+    setIsFloatingDockHidden(false);
+    saveLocalFloatingDockHidden(false);
+    setShowHideUndoToast(false);
+    if (hideToastTimerRef.current) clearTimeout(hideToastTimerRef.current);
+    addAlert(
+      'Floating Timer Restored',
+      'The floating focus dock is active on screen.',
+      'system'
     );
   };
 
@@ -626,6 +864,10 @@ export default function App() {
   };
 
   const handleDeleteTask = (id: string) => {
+    const taskToDelete = tasks.find((t) => t.id === id);
+    if (taskToDelete && taskToDelete.name.toLowerCase() === activeTaskName.toLowerCase()) {
+      setActiveTaskName('');
+    }
     setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
@@ -668,7 +910,7 @@ export default function App() {
     setTasks(DEFAULT_TASKS);
     setBlockedSites(DEFAULT_BLOCKED_SITES);
     setSettings(DEFAULT_SETTINGS);
-    setActiveTaskName('Algorithms & Data Structures');
+    setActiveTaskName('');
     setTotalSeconds(45 * 60);
     setRemainingSeconds(45 * 60);
     setIsRunning(false);
@@ -676,6 +918,9 @@ export default function App() {
     setDistractionCount(0);
     setTotalViolationsCount(0);
     setIsClockExpanded(false);
+    setIsFloatingDockHidden(false);
+    saveLocalFloatingDockHidden(false);
+    setShowHideUndoToast(false);
     setReflections([]);
     setSavedSnapshot(null);
     addAlert('System Reset Complete', 'All study data, tasks, and settings restored to factory defaults.', 'milestone');
@@ -712,30 +957,60 @@ export default function App() {
     );
   };
 
+  const isLight = settings.themeMode === 'light';
+
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col items-center justify-start p-3 sm:p-6 lg:p-8 relative overflow-x-hidden font-['Plus_Jakarta_Sans'] selection:bg-cyan-500/30 selection:text-cyan-200">
-      {/* Atmospheric Obsidian Deep Space Ambient Glows */}
-      <div className="fixed top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[750px] bg-gradient-to-b from-sky-600/10 via-cyan-700/5 to-transparent rounded-full blur-[140px] pointer-events-none" />
-      <div className="fixed bottom-10 right-10 w-[550px] h-[550px] bg-cyan-500/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="fixed inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.12] pointer-events-none" />
+    <div className={`min-h-screen ${isLight ? 'bg-[#f4f7fb] text-slate-800' : 'bg-[#030712] text-slate-100'} flex flex-col items-center justify-start p-3 sm:p-6 lg:p-8 relative overflow-x-hidden font-['Plus_Jakarta_Sans'] ${isLight ? 'selection:bg-cyan-500/30 selection:text-cyan-900' : 'selection:bg-cyan-500/30 selection:text-cyan-200'}`}>
+      {/* Atmospheric Ambient Glows */}
+      {isLight ? (
+        <>
+          <div className="fixed top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[750px] bg-sky-400/10 rounded-full blur-[140px] pointer-events-none" />
+          <div className="fixed bottom-10 right-10 w-[550px] h-[550px] bg-cyan-400/10 rounded-full blur-[120px] pointer-events-none" />
+          <div className="fixed inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.35] pointer-events-none" />
+        </>
+      ) : (
+        <>
+          <div className="fixed top-1/4 left-1/3 -translate-x-1/2 -translate-y-1/2 w-[750px] h-[750px] bg-gradient-to-b from-sky-600/10 via-cyan-700/5 to-transparent rounded-full blur-[140px] pointer-events-none" />
+          <div className="fixed bottom-10 right-10 w-[550px] h-[550px] bg-cyan-500/5 rounded-full blur-[120px] pointer-events-none" />
+          <div className="fixed inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:28px_28px] opacity-[0.12] pointer-events-none" />
+        </>
+      )}
 
       {/* Top PC Webpage Header & Navigation Bar */}
-      <header className="w-full max-w-7xl mx-auto mb-5 p-3.5 sm:p-4 rounded-3xl bg-[#061022]/85 border border-sky-500/20 backdrop-blur-xl flex flex-wrap items-center justify-between gap-3 shadow-[0_15px_40px_rgba(0,0,0,0.7)]">
-        {/* Brand: Just the clean name 'OC' (No logo image) */}
+      <header className={`w-full max-w-7xl mx-auto mb-5 p-3.5 sm:p-4 rounded-3xl backdrop-blur-xl flex flex-wrap items-center justify-between gap-3 ${
+        isLight
+          ? 'bg-white/95 border border-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.06)] text-slate-900'
+          : 'bg-[#061022]/85 border border-sky-500/20 shadow-[0_15px_40px_rgba(0,0,0,0.7)] text-slate-100'
+      }`}>
+        {/* Brand: OC with User's Golden Sand Clock Logo */}
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-sky-600 via-cyan-500 to-teal-400 flex items-center justify-center text-slate-950 font-black text-lg tracking-wider font-['Plus_Jakarta_Sans'] shadow-[0_0_20px_rgba(6,182,212,0.35)] border border-cyan-300/40 select-none">
-            OC
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsInitiating(true)}
+            className="w-11 h-11 rounded-2xl bg-black border border-cyan-500/40 p-1 flex items-center justify-center shadow-[0_0_20px_rgba(6,182,212,0.25)] overflow-hidden shrink-0 group cursor-pointer hover:border-cyan-400 hover:shadow-[0_0_25px_rgba(6,182,212,0.5)] transition-all duration-300 select-none"
+            title="OC Sand Clock (Click to replay system initiation)"
+          >
+            <img
+              src="/sandclock.svg"
+              alt="OC Sand Clock Logo"
+              referrerPolicy="no-referrer"
+              className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-300"
+            />
+          </button>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold text-white text-lg sm:text-xl tracking-wider font-['Plus_Jakarta_Sans']">
+              <span className={`font-extrabold text-lg sm:text-xl tracking-wider font-['Plus_Jakarta_Sans'] ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 OC
               </span>
-              <span className="text-[10px] bg-cyan-500/20 text-cyan-300 font-bold px-2.5 py-0.5 rounded-full border border-cyan-500/30">
+              <span className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                isLight
+                  ? 'bg-cyan-50 text-cyan-800 border-cyan-300'
+                  : 'bg-cyan-500/15 text-cyan-400 border-cyan-500/30 shadow-[0_0_10px_rgba(6,182,212,0.2)]'
+              }`}>
                 Focus Sanctuary
               </span>
             </div>
-            <p className="text-[11px] text-sky-200/60 hidden sm:block">
+            <p className={`text-[11px] hidden sm:block ${isLight ? 'text-slate-500' : 'text-sky-200/60'}`}>
               Deep study timer with anti-cheat & distraction shield
             </p>
           </div>
@@ -743,9 +1018,13 @@ export default function App() {
 
         {/* Center Task Pill (Enter Task - Editable) */}
         {isEditingTaskInline ? (
-          <div className="hidden md:flex items-center gap-1.5 px-3 py-1 rounded-2xl bg-[#061022] border border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]">
-            <BookOpen className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-            <span className="text-cyan-300 text-xs font-semibold shrink-0">Enter Task:</span>
+          <div className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-2xl border ${
+            isLight
+              ? 'bg-white border-cyan-500 shadow-sm'
+              : 'bg-[#061022] border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
+          }`}>
+            <BookOpen className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
+            <span className={`text-xs font-semibold shrink-0 ${isLight ? 'text-cyan-800' : 'text-cyan-300'}`}>Enter Task:</span>
             <input
               type="text"
               value={tempTaskName}
@@ -755,16 +1034,16 @@ export default function App() {
                 if (e.key === 'Escape') setIsEditingTaskInline(false);
               }}
               placeholder="Enter task name..."
-              className="bg-transparent text-xs text-white font-semibold focus:outline-none w-44"
+              className={`bg-transparent text-xs font-semibold focus:outline-none w-44 ${isLight ? 'text-slate-900 placeholder-slate-400' : 'text-white placeholder-slate-500'}`}
               autoFocus
             />
             <button
               type="button"
               onClick={handleSaveInlineTask}
-              className="p-1 rounded bg-cyan-500 hover:bg-cyan-400 text-white text-[10px] font-bold cursor-pointer"
+              className="p-1 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-[10px] font-bold cursor-pointer"
               title="Save task"
             >
-              <Check className="w-3 h-3" />
+              <Check className="w-3 h-3 stroke-[2.5]" />
             </button>
           </div>
         ) : (
@@ -773,15 +1052,21 @@ export default function App() {
               setTempTaskName(activeTaskName);
               setIsEditingTaskInline(true);
             }}
-            className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#061022] hover:bg-[#0b1c3a] border border-sky-500/20 hover:border-cyan-400/50 text-xs cursor-pointer transition shadow-sm group"
+            className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-2xl border text-xs cursor-pointer transition shadow-sm group ${
+              isLight
+                ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800'
+                : 'bg-[#061022] hover:bg-[#0b1c3a] border-sky-500/20 hover:border-cyan-400/50 text-slate-300'
+            }`}
             title="Click to enter or change study task"
           >
-            <BookOpen className="w-3.5 h-3.5 text-cyan-400 shrink-0 group-hover:scale-110 transition-transform" />
-            <span className="text-slate-400">Enter Task:</span>
-            <span className="font-bold text-white truncate max-w-[200px] group-hover:text-cyan-200 transition">
+            <BookOpen className={`w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
+            <span className={isLight ? 'text-slate-600' : 'text-slate-400'}>Enter Task:</span>
+            <span className={`font-bold truncate max-w-[200px] transition ${
+              isLight ? 'text-slate-900 group-hover:text-cyan-800' : 'text-white group-hover:text-cyan-200'
+            }`}>
               {activeTaskName || 'Enter task...'}
             </span>
-            <Edit2 className="w-3 h-3 text-cyan-400 opacity-60 group-hover:opacity-100 transition" />
+            <Edit2 className={`w-3 h-3 opacity-60 group-hover:opacity-100 transition ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
           </div>
         )}
 
@@ -791,12 +1076,34 @@ export default function App() {
           <button
             type="button"
             onClick={() => setShowZenSanctuary(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-sky-900/70 to-cyan-900/70 hover:from-sky-800 hover:to-cyan-800 border border-cyan-500/30 text-cyan-200 text-xs font-semibold cursor-pointer shadow-sm"
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer shadow-sm transition ${
+              isLight
+                ? 'bg-cyan-50 hover:bg-cyan-100 border-cyan-300 text-cyan-800'
+                : 'bg-gradient-to-r from-sky-900/70 to-cyan-900/70 hover:from-sky-800 hover:to-cyan-800 border border-cyan-500/30 text-cyan-200'
+            }`}
             title="Ambient Fullscreen Focus Mode (Zen Study Sanctuary) - Shortcut: F"
           >
-            <Sparkles className="w-3.5 h-3.5 text-cyan-300" />
+            <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
             <span className="text-[11px] hidden sm:inline">Zen Sanctuary (F)</span>
           </button>
+
+          {/* Floating Dock Restore Button (visible when dock is hidden) */}
+          {isFloatingDockHidden && (
+            <button
+              type="button"
+              onClick={handleUndoHideFloatingDock}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition shadow-sm animate-in fade-in ${
+                isLight
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800'
+                  : 'bg-[#061022] hover:bg-cyan-950/40 border-cyan-500/30 hover:border-cyan-400 text-cyan-300'
+              }`}
+              title="Restore Floating Mini Timer Dock"
+            >
+              <Eye className="w-3.5 h-3.5 text-cyan-500" />
+              <span className="text-[11px] hidden md:inline">Floating Timer: Hidden (Undo)</span>
+              <span className="text-[11px] md:hidden">Dock (Undo)</span>
+            </button>
+          )}
 
           {/* Strict Mode / Focus Lock (Anti-Cheat) Toggle */}
           <button
@@ -813,38 +1120,33 @@ export default function App() {
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
               strictAntiCheatMode
                 ? 'bg-rose-950/40 border-rose-500/40 text-rose-300'
-                : 'bg-[#061022] border-sky-500/20 text-slate-400 hover:text-slate-200'
+                : isLight
+                  ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                  : 'bg-[#061022] border-sky-500/20 text-slate-400 hover:text-slate-200'
             }`}
             title="Strict Mode / Focus Lock: Detects when you leave study tab"
           >
-            <ShieldCheck className={`w-3.5 h-3.5 ${strictAntiCheatMode ? 'text-rose-400' : 'text-slate-400'}`} />
+            <ShieldCheck className={`w-3.5 h-3.5 ${strictAntiCheatMode ? 'text-rose-400' : isLight ? 'text-slate-600' : 'text-slate-400'}`} />
             <span className="text-[11px] hidden sm:inline">
               Anti-Cheat: {strictAntiCheatMode ? 'Strict' : 'Off'}
             </span>
-          </button>
-
-          {/* System Reset Button */}
-          <button
-            type="button"
-            onClick={() => setShowSystemResetModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#061022] hover:bg-rose-950/30 border border-sky-500/20 hover:border-rose-500/40 text-slate-300 hover:text-rose-300 text-xs font-medium cursor-pointer transition"
-            title="System Reset: Restore initial 47:00 study standard & reset settings"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-rose-400" />
-            <span className="text-[11px] hidden md:inline">System Reset</span>
           </button>
 
           {/* Cloud Sync Status */}
           <button
             type="button"
             onClick={() => setShowSyncModal(true)}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#061022] border border-sky-500/20 text-sky-300 hover:text-white hover:border-cyan-400 transition cursor-pointer text-xs"
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition cursor-pointer text-xs ${
+              isLight
+                ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                : 'bg-[#061022] border-sky-500/20 text-sky-300 hover:text-white hover:border-cyan-400'
+            }`}
             title="Cloud Sync Across Devices"
           >
             {syncState.isOnline ? (
-              <Cloud className="w-3.5 h-3.5 text-cyan-400" />
+              <Cloud className="w-3.5 h-3.5 text-cyan-500" />
             ) : (
-              <WifiOff className="w-3.5 h-3.5 text-amber-400" />
+              <WifiOff className="w-3.5 h-3.5 text-slate-400" />
             )}
             <span className="text-[11px] font-medium hidden lg:inline">
               {syncState.isOnline ? 'Cloud' : 'Offline'}
@@ -857,12 +1159,16 @@ export default function App() {
             onClick={() => setShowBlockerModal(true)}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs transition cursor-pointer ${
               isRunning
-                ? 'bg-cyan-950/40 border-cyan-500/40 text-cyan-300'
-                : 'bg-[#061022] border-sky-500/20 text-slate-400 hover:text-sky-300'
+                ? isLight
+                  ? 'bg-cyan-100 border-cyan-300 text-cyan-800'
+                  : 'bg-cyan-950/40 border-cyan-500/40 text-cyan-300'
+                : isLight
+                  ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                  : 'bg-[#061022] border-sky-500/20 text-slate-400 hover:text-sky-300'
             }`}
             title="Website Distraction Shield"
           >
-            <Shield className="w-3.5 h-3.5 text-cyan-400" />
+            <Shield className="w-3.5 h-3.5 text-cyan-500" />
             <span className="text-[11px] font-medium hidden lg:inline">
               Shield: {isRunning ? 'Active' : 'Standby'}
             </span>
@@ -872,31 +1178,107 @@ export default function App() {
           <button
             type="button"
             onClick={() => setShowStatsModal(true)}
-            className="p-2 rounded-xl bg-[#061022] border border-sky-500/20 text-slate-400 hover:text-white hover:border-sky-500/40 transition cursor-pointer"
+            className={`p-2 rounded-xl border transition cursor-pointer ${
+              isLight
+                ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                : 'bg-[#061022] border-sky-500/20 text-slate-400 hover:text-white hover:border-sky-500/40'
+            }`}
             title="Productivity Statistics & Performance Trends"
           >
-            <BarChart2 className="w-4 h-4 text-cyan-400" />
+            <BarChart2 className="w-4 h-4 text-cyan-500" />
           </button>
 
           {/* Workflow Modes: Extend & Restore */}
           <button
             type="button"
             onClick={() => setShowExtendRestoreModal(true)}
-            className="p-2 rounded-xl bg-[#061022] border border-sky-500/20 text-slate-400 hover:text-white hover:border-sky-500/40 transition cursor-pointer"
+            className={`p-2 rounded-xl border transition cursor-pointer ${
+              isLight
+                ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                : 'bg-[#061022] border-sky-500/20 text-slate-400 hover:text-white hover:border-sky-500/40'
+            }`}
             title="Extend Flow / Restore Session"
           >
-            <History className="w-4 h-4 text-emerald-400" />
+            <History className="w-4 h-4 text-emerald-500" />
           </button>
 
           {/* Global System Reset Button */}
           <button
             type="button"
             onClick={() => setShowSystemResetModal(true)}
-            className="p-2 rounded-xl bg-[#061022] border border-rose-500/20 text-rose-400 hover:text-rose-300 hover:border-rose-500/50 transition cursor-pointer"
+            className={`p-2 rounded-xl border transition cursor-pointer ${
+              isLight
+                ? 'bg-slate-100 border-slate-300 text-rose-600 hover:bg-slate-200'
+                : 'bg-[#061022] border-rose-500/20 text-rose-400 hover:text-rose-300 hover:border-rose-500/50'
+            }`}
             title="System Reset (Restore all settings and data to factory default)"
           >
-            <RotateCcw className="w-4 h-4 text-rose-400" />
+            <RotateCcw className="w-4 h-4 text-rose-500" />
           </button>
+
+          {/* Quick Day / Night Theme Toggle */}
+          <button
+            type="button"
+            onClick={toggleThemeMode}
+            className={`p-2 rounded-xl border transition cursor-pointer ${
+              isLight
+                ? 'bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200'
+                : 'bg-[#061022] border-sky-500/20 text-cyan-400 hover:text-cyan-300 hover:border-cyan-400/40'
+            }`}
+            title={isLight ? 'Switch to Night Mode (Dark)' : 'Switch to Day Mode (Light)'}
+          >
+            {isLight ? <Moon className="w-4 h-4 text-slate-800" /> : <Sun className="w-4 h-4" />}
+          </button>
+
+          {/* Settings Section Button (Change Password, Day/Light Mode, Sync) */}
+          <button
+            type="button"
+            onClick={() => setIsSettingsModalOpen(true)}
+            className={`p-2 rounded-xl border transition cursor-pointer ${
+              isLight
+                ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                : 'bg-[#061022] border-sky-500/20 text-slate-300 hover:text-white hover:border-cyan-400/40'
+            }`}
+            title="Settings (Change Password, Day/Light Mode, Multi-Device Auto Sync)"
+          >
+            <SettingsIcon className={`w-4 h-4 ${isLight ? 'text-slate-800' : 'text-cyan-400'}`} />
+          </button>
+
+          {/* User Account / Multi-Device Sign In Button */}
+          {authData.user ? (
+            <button
+              type="button"
+              onClick={() => setIsSettingsModalOpen(true)}
+              className={`flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                isLight
+                  ? 'bg-cyan-50 border-cyan-300 text-slate-900 shadow-sm hover:bg-cyan-100'
+                  : 'bg-[#061022] border-cyan-500/40 text-white hover:border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
+              }`}
+              title={`Signed in as ${authData.user.email}. Auto-syncing across devices. Click for settings & change password.`}
+            >
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-cyan-600 to-sky-400 text-slate-950 font-black text-[11px] flex items-center justify-center uppercase shadow-sm">
+                {authData.user.name ? authData.user.name[0] : 'U'}
+              </div>
+              <span className="hidden sm:inline truncate max-w-[90px]">{authData.user.name}</span>
+              <span 
+                className={`w-2 h-2 rounded-full ${isAccountSyncing ? 'bg-cyan-400 animate-spin' : 'bg-emerald-400 animate-pulse'}`} 
+                title={isAccountSyncing ? 'Synchronizing with cloud...' : 'Auto-synced across devices'} 
+              />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setAuthModalInitialMode('login');
+                setIsAuthModalOpen(true);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:brightness-105 active:scale-95 transition cursor-pointer"
+              title="Sign in or create account for multi-device auto sync"
+            >
+              <LogInIcon className="w-3.5 h-3.5" />
+              <span>Log In / Sign Up</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -907,36 +1289,36 @@ export default function App() {
         <div className={`${isClockExpanded ? 'w-full max-w-[460px] flex flex-col items-center' : 'lg:col-span-5 flex flex-col items-center w-full'} transition-all duration-300`}>
           <main 
             id="focus-time-main-card"
-            className={`w-full ${isClockExpanded ? 'max-w-[460px] shadow-[0_30px_90px_rgba(0,0,0,0.95)] border-cyan-500/35' : 'max-w-[440px] shadow-[0_25px_70px_rgba(0,0,0,0.85)] border-sky-500/20'} rounded-[2.5rem] bg-[#081326]/95 backdrop-blur-2xl border p-6 sm:p-8 relative overflow-hidden flex flex-col justify-between transition-all duration-300`}
+            className={`w-full ${isClockExpanded ? 'max-w-[460px] shadow-[0_30px_90px_rgba(0,0,0,0.95)] border-cyan-500/35' : 'max-w-[440px] shadow-[0_25px_70px_rgba(0,0,0,0.85)] border-sky-500/20'} rounded-[2.5rem] ${isLight ? 'bg-white/95 border-slate-200 text-slate-900 shadow-xl' : 'bg-[#081326]/95 border-sky-500/20 text-slate-100'} backdrop-blur-2xl border p-6 sm:p-8 relative overflow-hidden flex flex-col justify-between transition-all duration-300`}
           >
             {/* Subtle internal gradient overlay */}
             <div className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-sky-500/10 via-transparent to-transparent pointer-events-none" />
 
             {/* 1. Header: Title & Subtitle + Expand/Restore Option & Date Dropdown */}
             <div className="flex items-start justify-between relative z-10 gap-2">
-              <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="text-2xl sm:text-[26px] font-extrabold text-white tracking-tight">
+              <div className="min-w-0 pr-1">
+                <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <h1 className="text-xl sm:text-[26px] font-extrabold text-white tracking-tight leading-tight shrink-0">
                     Focus Time
                   </h1>
                   {isClockExpanded && (
-                    <span className="text-[10px] bg-cyan-500/20 text-cyan-300 font-bold px-2 py-0.5 rounded-full border border-cyan-500/30">
+                    <span className="text-[10px] sm:text-[11px] bg-cyan-500/20 text-cyan-300 font-bold px-2 py-0.5 rounded-full border border-cyan-500/30 whitespace-nowrap inline-flex items-center">
                       Enlarged Clock
                     </span>
                   )}
                 </div>
-                <p className="text-xs sm:text-sm text-sky-200/60 mt-0.5 font-normal">
+                <p className="text-xs sm:text-sm text-sky-200/60 mt-0.5 font-normal truncate">
                   Stay consistent. See your progress.
                 </p>
               </div>
 
               {/* Action Buttons: Expand / Restore & Date Filter */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                 {/* Expand / Restore Button */}
                 <button
                   type="button"
                   onClick={() => setIsClockExpanded(!isClockExpanded)}
-                  className="px-3 py-1.5 rounded-2xl bg-[#0d203e]/90 hover:bg-[#132d56] border border-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                  className="px-2.5 sm:px-3 py-1.5 rounded-2xl bg-[#0d203e]/90 hover:bg-[#132d56] border border-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer shrink-0"
                   title={isClockExpanded ? 'Restore clock to normal size' : 'Expand focus clock'}
                 >
                   {isClockExpanded ? (
@@ -953,12 +1335,12 @@ export default function App() {
                 </button>
 
                 {/* "Today ⌵" Dropdown Pill Button */}
-                <div className="relative">
+                <div className="relative shrink-0">
                   <button
                     type="button"
                     id="period-dropdown-button"
                     onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                    className="px-3 py-1.5 rounded-2xl bg-[#0d203e]/90 hover:bg-[#132d56] border border-sky-500/25 text-sky-200 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                    className="px-2.5 sm:px-3 py-1.5 rounded-2xl bg-[#0d203e]/90 hover:bg-[#132d56] border border-sky-500/25 text-sky-200 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
                   >
                     <span>{dateFilter}</span>
                     <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
@@ -1209,7 +1591,7 @@ export default function App() {
           <div className="lg:col-span-7 flex flex-col gap-6 w-full animate-in fade-in duration-200">
           
           {/* CONSOLIDATED 3 CLEAN TABS SELECTOR */}
-          <nav aria-label="Study Suite Views" className="p-1.5 rounded-2xl bg-[#081326]/90 border border-sky-500/20 backdrop-blur-xl grid grid-cols-3 gap-1.5 sm:gap-2 shadow-lg">
+          <nav aria-label="Study Suite Views" className={`p-1.5 rounded-2xl backdrop-blur-xl grid grid-cols-3 gap-1.5 sm:gap-2 shadow-lg ${isLight ? 'bg-white/90 border border-slate-200' : 'bg-[#081326]/90 border border-sky-500/20'}`}>
             <button
               type="button"
               onClick={() => setDesktopTab('workspace')}
@@ -1275,7 +1657,7 @@ export default function App() {
                       </p>
                     </div>
                     <span className="text-[11px] text-cyan-300 font-mono bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">
-                      Active: {activeTaskName}
+                      {activeTaskName ? `Active: ${activeTaskName}` : 'Enter Task'}
                     </span>
                   </div>
 
@@ -1662,17 +2044,95 @@ export default function App() {
         onSaveReflection={handleSaveReflection}
       />
 
-      {/* 11. Mini Floating Picture-in-Picture Sticky Timer */}
-      <MiniFloatingTimer
-        remainingSeconds={remainingSeconds}
-        totalSeconds={totalSeconds}
-        isRunning={isRunning}
-        mode={mode}
-        activeTaskName={activeTaskName}
-        onToggleTimer={handleToggleTimer}
-        onExtend={handleExtend}
-        onOpenZen={() => setShowZenSanctuary(true)}
+      {/* 11. Mini Floating Picture-in-Picture Sticky Timer with Hide & Undo */}
+      {!isFloatingDockHidden && (
+        <MiniFloatingTimer
+          remainingSeconds={remainingSeconds}
+          totalSeconds={totalSeconds}
+          isRunning={isRunning}
+          mode={mode}
+          activeTaskName={activeTaskName}
+          onToggleTimer={handleToggleTimer}
+          onExtend={handleExtend}
+          onUndoExtend={handleUndoExtend}
+          canUndoExtend={!!lastExtensionMinutes}
+          onOpenZen={() => setShowZenSanctuary(true)}
+          onHide={handleHideFloatingDock}
+        />
+      )}
+
+      {/* 12. Authentication Modal (Sign In / Sign Up for New & Existing Users) */}
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        initialMode={authModalInitialMode}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthenticated={(user, token) => {
+          setAuthData({ user, token });
+          setIsAuthModalOpen(false);
+          pullAccountSync(token, false);
+          addAlert('Account Connected', `Welcome, ${user.name}! Workspace synchronized across your devices.`, 'milestone');
+        }}
       />
+
+      {/* 13. System Settings Modal (Change Password, Day/Light Mode, Multi-Device Auto Sync) */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        settings={settings}
+        onUpdateSettings={(updated) => {
+          setSettings(updated);
+          saveLocalSettings(updated);
+        }}
+        currentUser={authData.user}
+        authToken={authData.token}
+        onOpenAuthModal={(mode) => {
+          setIsSettingsModalOpen(false);
+          setAuthModalInitialMode(mode);
+          setIsAuthModalOpen(true);
+        }}
+        onSignOut={handleSignOut}
+        lastSyncedAt={lastAccountSyncedAt}
+        isSyncing={isAccountSyncing}
+        onTriggerSync={handleTriggerAccountSync}
+      />
+
+      {/* 0. System Initiate Splash Screen (Shows user golden hourglass logo for ~1 second, then enters app) */}
+      {isInitiating && (
+        <SystemInitiateSplash onComplete={handleInitiateComplete} />
+      )}
+
+      {/* Floating Timer Hidden Status Toast with Immediate Undo */}
+      {isFloatingDockHidden && showHideUndoToast && (
+        <aside
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-5 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-40 select-none flex items-center gap-3 px-3.5 py-2.5 rounded-2xl bg-[#061022]/95 border border-cyan-500/40 text-white shadow-[0_15px_40px_rgba(0,0,0,0.85)] backdrop-blur-2xl animate-in slide-in-from-bottom-4 duration-300"
+        >
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-slate-500" />
+            <span className="text-xs text-slate-300 font-medium">Floating dock hidden</span>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleUndoHideFloatingDock}
+            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 font-bold text-xs cursor-pointer transition shadow-sm"
+            title="Restore Floating Timer"
+          >
+            <RotateCcw className="w-3 h-3" />
+            Undo
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowHideUndoToast(false)}
+            className="text-slate-400 hover:text-white p-1 rounded-md transition cursor-pointer"
+            title="Dismiss Notification"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </aside>
+      )}
     </div>
   );
 }
