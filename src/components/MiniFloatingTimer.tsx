@@ -172,7 +172,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
           onClick={handleUntuck}
           className={`flex items-center gap-2 px-3 py-2.5 border shadow-xl backdrop-blur-xl cursor-pointer group transition-transform ${
             isLight
-              ? 'bg-white/95 text-slate-900 border-cyan-500/40 hover:bg-cyan-50'
+              ? 'bg-[#edf5f7] text-slate-900 border-slate-300 hover:bg-[#dce9ed]'
               : 'bg-[#061022]/95 hover:bg-[#0b1b36] border text-white shadow-[0_10px_35px_rgba(0,0,0,0.85)]'
           } ${
             tuckedSide === 'right'
@@ -238,7 +238,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
             onClick={() => setIsMinimized(false)}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-full border border-cyan-500/40 backdrop-blur-xl transition cursor-pointer group ${
               isLight
-                ? 'bg-white/95 text-slate-900 hover:border-cyan-500'
+                ? 'bg-[#edf5f7] text-slate-900 border-slate-300 hover:border-cyan-500'
                 : 'bg-[#061022]/95 text-white hover:border-cyan-400'
             }`}
             title="Expand Mini Floating Timer"
@@ -246,14 +246,14 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
             <div className="w-4 h-4 rounded-md overflow-hidden bg-black flex items-center justify-center shrink-0 border border-cyan-500/40">
               <img src="/sandclock.svg" alt="Sand clock" className="w-full h-full object-contain" />
             </div>
-            <GripHorizontal className={`w-3.5 h-3.5 ${isLight ? 'text-slate-400 group-hover:text-cyan-700' : 'text-slate-500 group-hover:text-cyan-400'}`} />
+            <GripHorizontal className={`w-3.5 h-3.5 ${isLight ? 'text-slate-500 group-hover:text-cyan-800' : 'text-slate-500 group-hover:text-cyan-400'}`} />
             <span className={`w-2 h-2 rounded-full ${isRunning ? 'bg-cyan-500 animate-ping' : 'bg-slate-400'}`} />
             <span className={`font-mono font-extrabold text-xs tracking-wider ${
-              isLight ? 'text-cyan-800' : 'text-cyan-300'
+              isLight ? 'text-cyan-900' : 'text-cyan-300'
             }`}>
               {timeFormatted}
             </span>
-            <ChevronUp className={`w-3.5 h-3.5 ${isLight ? 'text-slate-500 group-hover:text-slate-900' : 'text-slate-400 group-hover:text-white'}`} />
+            <ChevronUp className={`w-3.5 h-3.5 ${isLight ? 'text-slate-600 group-hover:text-slate-900' : 'text-slate-400 group-hover:text-white'}`} />
           </button>
           
           <button
@@ -261,7 +261,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
             onClick={() => handleTuckToSide('right')}
             className={`p-2 rounded-full border border-cyan-500/30 transition cursor-pointer ${
               isLight
-                ? 'bg-white/95 text-slate-600 hover:text-cyan-700 hover:border-cyan-500'
+                ? 'bg-[#edf5f7] text-slate-700 border-slate-300 hover:text-cyan-800 hover:border-cyan-500'
                 : 'bg-[#061022]/95 text-slate-400 hover:text-cyan-300 hover:border-cyan-400'
             }`}
             title="Tuck beside screen edge"
@@ -274,7 +274,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
             onClick={onHide}
             className={`p-2 rounded-full border border-cyan-500/30 transition cursor-pointer ${
               isLight
-                ? 'bg-white/95 text-slate-600 hover:text-rose-600 hover:border-rose-400'
+                ? 'bg-[#edf5f7] text-slate-700 border-slate-300 hover:text-rose-600 hover:border-rose-400'
                 : 'bg-[#061022]/95 text-slate-400 hover:text-rose-300 hover:border-rose-500/40'
             }`}
             title="Hide Floating Timer"
@@ -286,7 +286,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
         <div 
           className={`w-[92vw] max-w-[340px] sm:w-84 rounded-2xl border p-3 backdrop-blur-2xl relative overflow-hidden space-y-2.5 transition-shadow ${
             isLight
-              ? 'bg-white/95 border-cyan-500/40 shadow-xl'
+              ? 'bg-[#edf5f7] border-slate-300 shadow-xl'
               : 'bg-[#061022]/95 border-cyan-500/30 shadow-[0_15px_40px_rgba(0,0,0,0.85)]'
           } ${
             isDragging ? 'ring-2 ring-cyan-400/60 shadow-[0_20px_50px_rgba(0,0,0,0.95)]' : ''
@@ -341,7 +341,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
                   type="button"
                   onClick={handleResetPosition}
                   className={`p-1 rounded-lg cursor-pointer transition ${
-                    isLight ? 'hover:bg-slate-100 text-slate-500 hover:text-cyan-700' : 'hover:bg-slate-800 text-slate-400 hover:text-cyan-300'
+                    isLight ? 'hover:bg-[#dce9ed] text-slate-600 hover:text-cyan-800' : 'hover:bg-slate-800 text-slate-400 hover:text-cyan-300'
                   }`}
                   title="Reset to default position"
                 >
@@ -353,7 +353,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
                 type="button"
                 onClick={() => handleTuckToSide()}
                 className={`p-1 rounded-lg cursor-pointer transition ${
-                  isLight ? 'hover:bg-slate-100 text-slate-500 hover:text-cyan-700' : 'hover:bg-slate-800 text-slate-400 hover:text-cyan-300'
+                  isLight ? 'hover:bg-[#dce9ed] text-slate-600 hover:text-cyan-800' : 'hover:bg-slate-800 text-slate-400 hover:text-cyan-300'
                 }`}
                 title="Tuck beside screen edge (hide to side)"
               >
@@ -364,7 +364,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
                 type="button"
                 onClick={onOpenZen}
                 className={`p-1 rounded-lg cursor-pointer transition ${
-                  isLight ? 'hover:bg-slate-100 text-cyan-700 hover:text-cyan-900' : 'hover:bg-slate-800 text-cyan-300 hover:text-white'
+                  isLight ? 'hover:bg-[#dce9ed] text-cyan-800 hover:text-cyan-950' : 'hover:bg-slate-800 text-cyan-300 hover:text-white'
                 }`}
                 title="Zen Sanctuary Fullscreen (F)"
               >
@@ -375,7 +375,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
                 type="button"
                 onClick={() => setIsMinimized(true)}
                 className={`p-1 rounded-lg cursor-pointer transition ${
-                  isLight ? 'hover:bg-slate-100 text-slate-500 hover:text-slate-900' : 'hover:bg-slate-800 text-slate-400 hover:text-white'
+                  isLight ? 'hover:bg-[#dce9ed] text-slate-600 hover:text-slate-900' : 'hover:bg-slate-800 text-slate-400 hover:text-white'
                 }`}
                 title="Minimize to Pill"
               >
@@ -386,7 +386,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
                 type="button"
                 onClick={onHide}
                 className={`p-1 rounded-lg cursor-pointer transition ${
-                  isLight ? 'hover:bg-rose-50 text-slate-500 hover:text-rose-600' : 'hover:bg-rose-950/40 text-slate-400 hover:text-rose-300'
+                  isLight ? 'hover:bg-rose-100 text-slate-600 hover:text-rose-700' : 'hover:bg-rose-950/40 text-slate-400 hover:text-rose-300'
                 }`}
                 title="Hide Floating Dock (Undo Available)"
               >
@@ -432,7 +432,7 @@ export const MiniFloatingTimer: React.FC<MiniFloatingTimerProps> = ({
                 onClick={() => onExtend(5)}
                 className={`px-2 py-1 rounded-lg text-[11px] font-bold cursor-pointer transition flex items-center gap-0.5 ${
                   isLight
-                    ? 'bg-slate-100 hover:bg-slate-200 text-cyan-800 border border-slate-200'
+                    ? 'bg-[#dce9ed] hover:bg-[#cfdfe4] text-cyan-900 border border-slate-300'
                     : 'bg-slate-800/80 hover:bg-slate-700 text-cyan-300'
                 }`}
                 title="Add 5 minutes"

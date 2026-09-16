@@ -1298,16 +1298,24 @@ export default function App() {
             <div className="flex items-start justify-between relative z-10 gap-2">
               <div className="min-w-0 pr-1">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <h1 className="text-xl sm:text-[26px] font-extrabold text-white tracking-tight leading-tight shrink-0">
+                  <h1 className={`text-xl sm:text-[26px] font-extrabold tracking-tight leading-tight shrink-0 ${
+                    isLight ? 'text-slate-900' : 'text-white'
+                  }`}>
                     Focus Time
                   </h1>
                   {isClockExpanded && (
-                    <span className="text-[10px] sm:text-[11px] bg-cyan-500/20 text-cyan-300 font-bold px-2 py-0.5 rounded-full border border-cyan-500/30 whitespace-nowrap inline-flex items-center">
+                    <span className={`text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap inline-flex items-center ${
+                      isLight
+                        ? 'bg-cyan-50 text-cyan-800 border-cyan-300'
+                        : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                    }`}>
                       Enlarged Clock
                     </span>
                   )}
                 </div>
-                <p className="text-xs sm:text-sm text-sky-200/60 mt-0.5 font-normal truncate">
+                <p className={`text-xs sm:text-sm mt-0.5 font-normal truncate ${
+                  isLight ? 'text-slate-600' : 'text-sky-200/60'
+                }`}>
                   Stay consistent. See your progress.
                 </p>
               </div>
@@ -1318,7 +1326,11 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setIsClockExpanded(!isClockExpanded)}
-                  className="px-2.5 sm:px-3 py-1.5 rounded-2xl bg-[#0d203e]/90 hover:bg-[#132d56] border border-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer shrink-0"
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-2xl border text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer shrink-0 ${
+                    isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800'
+                      : 'bg-[#0d203e]/90 hover:bg-[#132d56] border-cyan-500/30 text-cyan-300'
+                  }`}
                   title={isClockExpanded ? 'Restore clock to normal size' : 'Expand focus clock'}
                 >
                   {isClockExpanded ? (
@@ -1340,14 +1352,20 @@ export default function App() {
                     type="button"
                     id="period-dropdown-button"
                     onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                    className="px-2.5 sm:px-3 py-1.5 rounded-2xl bg-[#0d203e]/90 hover:bg-[#132d56] border border-sky-500/25 text-sky-200 text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                    className={`px-2.5 sm:px-3 py-1.5 rounded-2xl border text-xs font-semibold flex items-center gap-1.5 transition shadow-sm cursor-pointer ${
+                      isLight
+                        ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800'
+                        : 'bg-[#0d203e]/90 hover:bg-[#132d56] border-sky-500/25 text-sky-200'
+                    }`}
                   >
                     <span>{dateFilter}</span>
-                    <ChevronDown className="w-3.5 h-3.5 text-sky-400" />
+                    <ChevronDown className={`w-3.5 h-3.5 ${isLight ? 'text-slate-600' : 'text-sky-400'}`} />
                   </button>
 
                   {showFilterDropdown && (
-                    <div className="absolute right-0 mt-2 w-32 rounded-xl bg-[#091833] border border-sky-500/30 shadow-2xl py-1 z-30 text-xs text-slate-200">
+                    <div className={`absolute right-0 mt-2 w-32 rounded-xl border shadow-2xl py-1 z-30 text-xs ${
+                      isLight ? 'bg-white border-slate-200 text-slate-800 shadow-slate-300/50' : 'bg-[#091833] border-sky-500/30 text-slate-200 shadow-2xl'
+                    }`}>
                       {(['Today', 'Yesterday', 'This Week'] as const).map((filter) => (
                         <button
                           key={filter}
@@ -1356,12 +1374,14 @@ export default function App() {
                             setDateFilter(filter);
                             setShowFilterDropdown(false);
                           }}
-                          className={`w-full text-left px-3 py-1.5 hover:bg-sky-500/20 flex items-center justify-between cursor-pointer ${
-                            dateFilter === filter ? 'text-cyan-300 font-bold bg-sky-500/10' : ''
+                          className={`w-full text-left px-3 py-1.5 flex items-center justify-between cursor-pointer ${
+                            dateFilter === filter
+                              ? isLight ? 'text-cyan-800 font-bold bg-cyan-50' : 'text-cyan-300 font-bold bg-sky-500/10'
+                              : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-sky-500/20 text-slate-300'
                           }`}
                         >
                           {filter}
-                          {dateFilter === filter && <CheckCircle className="w-3 h-3 text-cyan-400" />}
+                          {dateFilter === filter && <CheckCircle className={`w-3 h-3 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />}
                         </button>
                       ))}
                     </div>
@@ -1371,14 +1391,16 @@ export default function App() {
             </div>
 
             {/* Work & Break Quick Segmented Switcher */}
-            <div className="my-3 flex items-center p-1 rounded-xl bg-[#061022] border border-sky-500/15 relative z-10">
+            <div className={`my-3 flex items-center p-1 rounded-xl border relative z-10 ${
+              isLight ? 'bg-slate-100 border-slate-300' : 'bg-[#061022] border-sky-500/15'
+            }`}>
               <button
                 type="button"
                 onClick={() => handleSwitchMode('focus')}
                 className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
                   mode === 'focus'
                     ? 'bg-gradient-to-r from-sky-600 to-cyan-500 text-white shadow-md'
-                    : 'text-slate-400 hover:text-slate-200'
+                    : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 🎯 Focus ({Math.floor(settings.focusDurationMinutes)}m)
@@ -1389,7 +1411,7 @@ export default function App() {
                 className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
                   mode === 'short_break'
                     ? 'bg-emerald-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-slate-200'
+                    : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 ☕ Break (5m)
@@ -1400,7 +1422,7 @@ export default function App() {
                 className={`flex-1 py-1.5 px-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
                   mode === 'long_break'
                     ? 'bg-purple-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-slate-200'
+                    : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
                 🌴 Long (15m)
@@ -1410,8 +1432,10 @@ export default function App() {
             {/* EDITABLE TASK NAME (Explicitly requested by user!) */}
             <div className="mb-2 relative z-10">
               {isEditingTaskInline ? (
-                <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#061022] border border-cyan-400">
-                  <BookOpen className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border ${
+                  isLight ? 'bg-slate-100 border-cyan-500' : 'bg-[#061022] border-cyan-400'
+                }`}>
+                  <BookOpen className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                   <input
                     type="text"
                     value={tempTaskName}
@@ -1421,7 +1445,9 @@ export default function App() {
                       if (e.key === 'Escape') setIsEditingTaskInline(false);
                     }}
                     placeholder="Enter study task name..."
-                    className="flex-1 bg-transparent text-xs text-white font-semibold focus:outline-none"
+                    className={`flex-1 bg-transparent text-xs font-semibold focus:outline-none ${
+                      isLight ? 'text-slate-900 placeholder:text-slate-400' : 'text-white placeholder:text-slate-500'
+                    }`}
                     autoFocus
                   />
                   <button
@@ -1438,15 +1464,19 @@ export default function App() {
                     setTempTaskName(activeTaskName);
                     setIsEditingTaskInline(true);
                   }}
-                  className="flex items-center justify-center gap-1.5 text-xs text-sky-200 hover:text-white group cursor-pointer py-1 px-2 rounded-lg hover:bg-sky-500/10 transition"
+                  className={`flex items-center justify-center gap-1.5 text-xs group cursor-pointer py-1 px-2 rounded-lg transition ${
+                    isLight ? 'text-slate-700 hover:text-slate-900 hover:bg-slate-100' : 'text-sky-200 hover:text-white hover:bg-sky-500/10'
+                  }`}
                   title="Click to enter or edit task name"
                 >
-                  <BookOpen className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                  <span className="text-slate-400 text-xs font-medium">Enter Task:</span>
-                  <span className="font-semibold text-slate-200 truncate max-w-[240px] underline decoration-sky-500/40 decoration-dashed underline-offset-4 group-hover:text-cyan-200 transition">
+                  <BookOpen className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
+                  <span className={`text-xs font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Enter Task:</span>
+                  <span className={`font-semibold truncate max-w-[240px] underline decoration-dashed underline-offset-4 transition ${
+                    isLight ? 'text-slate-900 decoration-cyan-600/50 group-hover:text-cyan-700' : 'text-slate-200 decoration-sky-500/40 group-hover:text-cyan-200'
+                  }`}>
                     {activeTaskName || 'Enter task...'}
                   </span>
-                  <Edit2 className="w-3 h-3 text-cyan-400 opacity-60 group-hover:opacity-100 transition" />
+                  <Edit2 className={`w-3 h-3 transition ${isLight ? 'text-cyan-700 opacity-70 group-hover:opacity-100' : 'text-cyan-400 opacity-60 group-hover:opacity-100'}`} />
                 </div>
               )}
             </div>
@@ -1464,6 +1494,7 @@ export default function App() {
                 isExpanded={isClockExpanded}
                 onToggleExpand={() => setIsClockExpanded(!isClockExpanded)}
                 onEnterZenMode={() => setShowZenSanctuary(true)}
+                isLight={isLight}
               />
             </div>
 
@@ -1472,6 +1503,7 @@ export default function App() {
               <ProductivityChart
                 sessions={sessions}
                 activeDateFilter={dateFilter}
+                isLight={isLight}
               />
             </div>
 
@@ -1500,7 +1532,11 @@ export default function App() {
                 type="button"
                 id="timer-reset-button"
                 onClick={handleReset}
-                className="py-3 px-6 rounded-full bg-[#0a1832]/90 hover:bg-[#0f244c] active:scale-[0.98] border border-[#1b3a69] hover:border-sky-500/40 text-sky-200 hover:text-white font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm"
+                className={`py-3 px-6 rounded-full active:scale-[0.98] border font-bold text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm ${
+                  isLight
+                    ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800'
+                    : 'bg-[#0a1832]/90 hover:bg-[#0f244c] border-[#1b3a69] hover:border-sky-500/40 text-sky-200 hover:text-white'
+                }`}
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Reset</span>
@@ -1508,29 +1544,37 @@ export default function App() {
             </div>
 
             {/* Quick Flow booster bar */}
-            <div className="mt-2.5 flex items-center justify-between text-[11px] text-sky-300/60 px-1 relative z-10">
+            <div className={`mt-2.5 flex items-center justify-between text-[11px] px-1 relative z-10 ${
+              isLight ? 'text-slate-600' : 'text-sky-300/60'
+            }`}>
               <button
                 type="button"
                 onClick={() => handleExtend(5)}
-                className="hover:text-cyan-300 transition flex items-center gap-1 cursor-pointer"
+                className={`transition flex items-center gap-1 cursor-pointer font-medium ${
+                  isLight ? 'hover:text-cyan-700 text-slate-700' : 'hover:text-cyan-300'
+                }`}
               >
-                <Plus className="w-3 h-3 text-cyan-400" />
+                <Plus className={`w-3 h-3 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                 +5m Extend
               </button>
               <button
                 type="button"
                 onClick={() => handleExtend(10)}
-                className="hover:text-cyan-300 transition flex items-center gap-1 cursor-pointer"
+                className={`transition flex items-center gap-1 cursor-pointer font-medium ${
+                  isLight ? 'hover:text-cyan-700 text-slate-700' : 'hover:text-cyan-300'
+                }`}
               >
-                <Plus className="w-3 h-3 text-cyan-400" />
+                <Plus className={`w-3 h-3 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                 +10m Extend
               </button>
               <button
                 type="button"
                 onClick={handleRestore}
                 disabled={!savedSnapshot}
-                className={`transition flex items-center gap-1 cursor-pointer ${
-                  savedSnapshot ? 'hover:text-emerald-300 text-emerald-400/80' : 'opacity-40 cursor-not-allowed'
+                className={`transition flex items-center gap-1 cursor-pointer font-medium ${
+                  savedSnapshot
+                    ? isLight ? 'hover:text-emerald-700 text-emerald-600' : 'hover:text-emerald-300 text-emerald-400/80'
+                    : 'opacity-40 cursor-not-allowed'
                 }`}
               >
                 <History className="w-3 h-3" />
@@ -1543,14 +1587,26 @@ export default function App() {
               {/* Focus Time Card */}
               <div 
                 id="stat-card-focus-time"
-                className="p-4 rounded-2xl bg-[#091833]/90 border border-sky-500/15 flex items-center gap-3.5 hover:border-sky-500/30 transition shadow-sm"
+                className={`p-4 rounded-2xl border flex items-center gap-3.5 transition shadow-sm ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-200'
+                    : 'bg-[#091833]/90 border-sky-500/15 hover:border-sky-500/30'
+                }`}
               >
-                <div className="w-11 h-11 rounded-full bg-[#051a3a] border border-[#0d3b6f] flex items-center justify-center text-cyan-400 shrink-0">
+                <div className={`w-11 h-11 rounded-full border flex items-center justify-center shrink-0 ${
+                  isLight
+                    ? 'bg-cyan-50 border-cyan-200 text-cyan-700'
+                    : 'bg-[#051a3a] border-[#0d3b6f] text-cyan-400'
+                }`}>
                   <Clock className="w-5 h-5 stroke-[2.2]" />
                 </div>
                 <div>
-                  <div className="text-[11px] text-sky-300/70 font-medium">Focus Time</div>
-                  <div className="text-xl sm:text-2xl font-extrabold text-white font-['Plus_Jakarta_Sans']">
+                  <div className={`text-[11px] font-medium ${isLight ? 'text-slate-500' : 'text-sky-300/70'}`}>
+                    Focus Time
+                  </div>
+                  <div className={`text-xl sm:text-2xl font-extrabold font-['Plus_Jakarta_Sans'] ${
+                    isLight ? 'text-slate-900' : 'text-white'
+                  }`}>
                     {todayFocusMinutes} min
                   </div>
                 </div>
@@ -1559,14 +1615,26 @@ export default function App() {
               {/* Sessions Card */}
               <div 
                 id="stat-card-sessions"
-                className="p-4 rounded-2xl bg-[#091833]/90 border border-sky-500/15 flex items-center gap-3.5 hover:border-sky-500/30 transition shadow-sm"
+                className={`p-4 rounded-2xl border flex items-center gap-3.5 transition shadow-sm ${
+                  isLight
+                    ? 'bg-slate-50 border-slate-200'
+                    : 'bg-[#091833]/90 border-sky-500/15 hover:border-sky-500/30'
+                }`}
               >
-                <div className="w-11 h-11 rounded-full bg-[#051a3a] border border-[#0d3b6f] flex items-center justify-center text-cyan-400 shrink-0">
+                <div className={`w-11 h-11 rounded-full border flex items-center justify-center shrink-0 ${
+                  isLight
+                    ? 'bg-cyan-50 border-cyan-200 text-cyan-700'
+                    : 'bg-[#051a3a] border-[#0d3b6f] text-cyan-400'
+                }`}>
                   <BarChart2 className="w-5 h-5 stroke-[2.2]" />
                 </div>
                 <div>
-                  <div className="text-[11px] text-sky-300/70 font-medium">Sessions</div>
-                  <div className="text-xl sm:text-2xl font-extrabold text-white font-['Plus_Jakarta_Sans']">
+                  <div className={`text-[11px] font-medium ${isLight ? 'text-slate-500' : 'text-sky-300/70'}`}>
+                    Sessions
+                  </div>
+                  <div className={`text-xl sm:text-2xl font-extrabold font-['Plus_Jakarta_Sans'] ${
+                    isLight ? 'text-slate-900' : 'text-white'
+                  }`}>
                     {todaySessionCount}
                   </div>
                 </div>
@@ -1581,6 +1649,7 @@ export default function App() {
                 remainingSeconds={remainingSeconds}
                 totalSeconds={totalSeconds}
                 isFocusMode={mode === 'focus'}
+                isLight={isLight}
               />
             </div>
           </main>
@@ -1591,19 +1660,21 @@ export default function App() {
           <div className="lg:col-span-7 flex flex-col gap-6 w-full animate-in fade-in duration-200">
           
           {/* CONSOLIDATED 3 CLEAN TABS SELECTOR */}
-          <nav aria-label="Study Suite Views" className={`p-1.5 rounded-2xl backdrop-blur-xl grid grid-cols-3 gap-1.5 sm:gap-2 shadow-lg ${isLight ? 'bg-white/90 border border-slate-200' : 'bg-[#081326]/90 border border-sky-500/20'}`}>
+          <nav aria-label="Study Suite Views" className={`p-1.5 rounded-2xl backdrop-blur-xl grid grid-cols-3 gap-1.5 sm:gap-2 shadow-lg ${isLight ? 'bg-white/90 border border-slate-200 shadow-slate-200/50' : 'bg-[#081326]/90 border border-sky-500/20'}`}>
             <button
               type="button"
               onClick={() => setDesktopTab('workspace')}
               className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                 desktopTab === 'workspace'
                   ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30 font-black'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  : isLight
+                    ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
               <BookOpen className="w-4 h-4" />
               <span className="hidden sm:inline">Workspace &</span> Tasks
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${desktopTab === 'workspace' ? 'bg-slate-950/20 text-slate-900 font-bold' : 'bg-slate-800 text-slate-400'}`}>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${desktopTab === 'workspace' ? 'bg-slate-950/20 text-slate-900 font-bold' : isLight ? 'bg-slate-100 text-slate-700 font-medium' : 'bg-slate-800 text-slate-400'}`}>
                 {tasks.length}
               </span>
             </button>
@@ -1614,12 +1685,14 @@ export default function App() {
               className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                 desktopTab === 'insights'
                   ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30 font-black'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  : isLight
+                    ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
               <BarChart2 className="w-4 h-4" />
               <span className="hidden sm:inline">Insights &</span> Reflections
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${desktopTab === 'insights' ? 'bg-slate-950/20 text-slate-900 font-bold' : 'bg-slate-800 text-slate-400'}`}>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${desktopTab === 'insights' ? 'bg-slate-950/20 text-slate-900 font-bold' : isLight ? 'bg-slate-100 text-slate-700 font-medium' : 'bg-slate-800 text-slate-400'}`}>
                 {reflections.length}
               </span>
             </button>
@@ -1630,7 +1703,9 @@ export default function App() {
               className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
                 desktopTab === 'protocols_shield'
                   ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30 font-black'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                  : isLight
+                    ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
               <Target className="w-4 h-4" />
@@ -1639,24 +1714,36 @@ export default function App() {
           </nav>
 
           {/* PC Desktop Content Panel */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-[#081326]/90 border border-sky-500/20 backdrop-blur-2xl shadow-xl min-h-[480px] flex flex-col justify-between">
+          <div className={`p-5 sm:p-6 rounded-3xl backdrop-blur-2xl shadow-xl min-h-[480px] flex flex-col justify-between border ${
+            isLight
+              ? 'bg-white/95 border-slate-200 text-slate-800 shadow-slate-200/50'
+              : 'bg-[#081326]/90 border-sky-500/20 text-slate-100'
+          }`}>
             
             {/* VIEW 1: Workspace & Tasks (Tasks + Flow Audio Visualizer) */}
             {desktopTab === 'workspace' && (
               <div className="space-y-6">
                 {/* Academic Task List */}
                 <div>
-                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-sky-500/15">
+                  <div className={`flex items-center justify-between pb-3 mb-3 border-b ${
+                    isLight ? 'border-slate-200' : 'border-sky-500/15'
+                  }`}>
                     <div>
-                      <h2 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-                        <BookOpen className="w-4 h-4 text-cyan-400" />
+                      <h2 className={`text-sm sm:text-base font-bold flex items-center gap-2 ${
+                        isLight ? 'text-slate-900' : 'text-white'
+                      }`}>
+                        <BookOpen className={`w-4 h-4 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                         Academic Task List & Checklist
                       </h2>
-                      <p className="text-[11px] text-sky-200/60 mt-0.5">
+                      <p className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-600' : 'text-sky-200/60'}`}>
                         Select any task to set it as active focus task, or edit directly.
                       </p>
                     </div>
-                    <span className="text-[11px] text-cyan-300 font-mono bg-cyan-500/10 px-2.5 py-1 rounded-full border border-cyan-500/20">
+                    <span className={`text-[11px] font-mono px-2.5 py-1 rounded-full border ${
+                      isLight
+                        ? 'text-cyan-800 bg-cyan-50 border-cyan-200 font-semibold'
+                        : 'text-cyan-300 bg-cyan-500/10 border-cyan-500/20'
+                    }`}>
                       {activeTaskName ? `Active: ${activeTaskName}` : 'Enter Task'}
                     </span>
                   </div>
@@ -1682,32 +1769,39 @@ export default function App() {
                     onAddTask={handleAddTask}
                     onToggleTaskComplete={handleToggleTaskComplete}
                     onDeleteTask={handleDeleteTask}
+                    isLight={isLight}
                   />
                 </div>
 
                 {/* Embedded Ambient Sound Engine & Wave Visualizer */}
-                <div className="pt-3 border-t border-sky-500/15">
+                <div className={`pt-3 border-t ${isLight ? 'border-slate-200' : 'border-sky-500/15'}`}>
                   <div className="flex items-center justify-between mb-3">
                     <div>
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <Headphones className="w-4 h-4 text-cyan-400" />
+                      <h3 className={`text-sm font-bold flex items-center gap-2 ${
+                        isLight ? 'text-slate-900' : 'text-white'
+                      }`}>
+                        <Headphones className={`w-4 h-4 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                         Ambient Audio & Binaural Soundscape
                       </h3>
-                      <p className="text-[11px] text-sky-200/60 mt-0.5">
+                      <p className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-600' : 'text-sky-200/60'}`}>
                         Binaural beats, ambient noise layers, or insert custom audio streams with live visualizer.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => setShowZenSanctuary(true)}
-                      className="px-2.5 py-1 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 border border-cyan-500/30 text-cyan-300 text-xs font-semibold flex items-center gap-1 cursor-pointer transition"
+                      className={`px-2.5 py-1 rounded-xl border text-xs font-semibold flex items-center gap-1 cursor-pointer transition ${
+                        isLight
+                          ? 'bg-cyan-50 hover:bg-cyan-100 border-cyan-300 text-cyan-800'
+                          : 'bg-cyan-950/60 hover:bg-cyan-900/60 border-cyan-500/30 text-cyan-300'
+                      }`}
                     >
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>Zen Mode</span>
                     </button>
                   </div>
 
-                  <AmbientSoundPlayer isTimerRunning={isRunning} compact={true} />
+                  <AmbientSoundPlayer isTimerRunning={isRunning} compact={true} isLight={isLight} />
                 </div>
               </div>
             )}
@@ -1717,43 +1811,57 @@ export default function App() {
               <div className="space-y-5">
                 {/* Summary Metric Badges */}
                 <div className="grid grid-cols-4 gap-2.5">
-                  <div className="p-3 rounded-2xl bg-[#061022] border border-sky-500/15 text-center">
-                    <div className="text-[10px] text-sky-300/70 font-semibold">Today's Focus</div>
-                    <div className="text-xl font-bold text-white font-mono mt-0.5">
-                      {todayFocusMinutes}<span className="text-xs text-sky-400 font-normal">m</span>
+                  <div className={`p-3 rounded-2xl border text-center ${
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
+                  }`}>
+                    <div className={`text-[10px] font-semibold ${isLight ? 'text-slate-500' : 'text-sky-300/70'}`}>Today's Focus</div>
+                    <div className={`text-xl font-bold font-mono mt-0.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      {todayFocusMinutes}<span className={`text-xs font-normal ${isLight ? 'text-cyan-700' : 'text-sky-400'}`}>m</span>
                     </div>
                   </div>
-                  <div className="p-3 rounded-2xl bg-[#061022] border border-sky-500/15 text-center">
-                    <div className="text-[10px] text-sky-300/70 font-semibold">Sessions</div>
-                    <div className="text-xl font-bold text-white font-mono mt-0.5">
+                  <div className={`p-3 rounded-2xl border text-center ${
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
+                  }`}>
+                    <div className={`text-[10px] font-semibold ${isLight ? 'text-slate-500' : 'text-sky-300/70'}`}>Sessions</div>
+                    <div className={`text-xl font-bold font-mono mt-0.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       {todaySessionCount}
                     </div>
                   </div>
-                  <div className="p-3 rounded-2xl bg-[#061022] border border-sky-500/15 text-center">
-                    <div className="text-[10px] text-sky-300/70 font-semibold">Shielded Blocks</div>
-                    <div className="text-xl font-bold text-cyan-300 font-mono mt-0.5">
+                  <div className={`p-3 rounded-2xl border text-center ${
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
+                  }`}>
+                    <div className={`text-[10px] font-semibold ${isLight ? 'text-slate-500' : 'text-sky-300/70'}`}>Shielded Blocks</div>
+                    <div className={`text-xl font-bold font-mono mt-0.5 ${isLight ? 'text-cyan-800' : 'text-cyan-300'}`}>
                       {distractionCount}
                     </div>
                   </div>
-                  <div className="p-3 rounded-2xl bg-[#061022] border border-sky-500/15 text-center">
-                    <div className="text-[10px] text-sky-300/70 font-semibold">Reflections</div>
-                    <div className="text-xl font-bold text-emerald-300 font-mono mt-0.5">
+                  <div className={`p-3 rounded-2xl border text-center ${
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
+                  }`}>
+                    <div className={`text-[10px] font-semibold ${isLight ? 'text-slate-500' : 'text-sky-300/70'}`}>Reflections</div>
+                    <div className={`text-xl font-bold font-mono mt-0.5 ${isLight ? 'text-emerald-800' : 'text-emerald-300'}`}>
                       {reflections.length}
                     </div>
                   </div>
                 </div>
 
                 {/* Hourly Productivity Wave Visualizer (Redesigned) */}
-                <div className="p-4 rounded-2xl bg-[#061022] border border-sky-500/15">
-                  <div className="text-xs font-bold text-white mb-2 flex items-center justify-between">
+                <div className={`p-4 rounded-2xl border ${
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
+                }`}>
+                  <div className={`text-xs font-bold mb-2 flex items-center justify-between ${
+                    isLight ? 'text-slate-900' : 'text-white'
+                  }`}>
                     <span className="flex items-center gap-1.5">
-                      <BarChart2 className="w-3.5 h-3.5 text-cyan-400" />
+                      <BarChart2 className={`w-3.5 h-3.5 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                       Hourly Chronotype Productivity Wave
                     </span>
                     <button
                       type="button"
                       onClick={() => setShowStatsModal(true)}
-                      className="text-[11px] text-cyan-400 hover:underline cursor-pointer"
+                      className={`text-[11px] hover:underline cursor-pointer ${
+                        isLight ? 'text-cyan-700 font-semibold' : 'text-cyan-400'
+                      }`}
                     >
                       Detailed Analytics →
                     </button>
@@ -1761,18 +1869,23 @@ export default function App() {
                   <ProductivityChart
                     sessions={sessions}
                     activeDateFilter={dateFilter}
+                    isLight={isLight}
                   />
                 </div>
 
                 {/* Energy Journaling & Session Reflections */}
                 <div className="pt-2">
-                  <div className="flex items-center justify-between pb-2 mb-3 border-b border-sky-500/15">
+                  <div className={`flex items-center justify-between pb-2 mb-3 border-b ${
+                    isLight ? 'border-slate-200' : 'border-sky-500/15'
+                  }`}>
                     <div>
-                      <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                      <h3 className={`text-xs sm:text-sm font-bold flex items-center gap-1.5 ${
+                        isLight ? 'text-slate-900' : 'text-white'
+                      }`}>
+                        <Sparkles className={`w-3.5 h-3.5 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                         Session Reflections & Energy Journal
                       </h3>
-                      <p className="text-[10px] text-sky-200/60">
+                      <p className={`text-[10px] ${isLight ? 'text-slate-600' : 'text-sky-200/60'}`}>
                         Subjective energy ratings (1-5), accomplishments, and study notes.
                       </p>
                     </div>
@@ -1787,10 +1900,12 @@ export default function App() {
                   </div>
 
                   {reflections.length === 0 ? (
-                    <div className="text-center py-6 rounded-2xl bg-[#061022] border border-sky-500/15 space-y-1.5">
-                      <Sparkles className="w-6 h-6 text-cyan-400/50 mx-auto" />
-                      <p className="text-xs font-semibold text-white">No reflections recorded yet</p>
-                      <p className="text-[10px] text-slate-400 max-w-sm mx-auto">
+                    <div className={`text-center py-6 rounded-2xl border space-y-1.5 ${
+                      isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
+                    }`}>
+                      <Sparkles className={`w-6 h-6 mx-auto ${isLight ? 'text-cyan-700' : 'text-cyan-400/50'}`} />
+                      <p className={`text-xs font-semibold ${isLight ? 'text-slate-800' : 'text-white'}`}>No reflections recorded yet</p>
+                      <p className={`text-[10px] max-w-sm mx-auto ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                         Complete a focus session or click "Log Reflection" to log mental focus and energy metrics.
                       </p>
                     </div>
@@ -1799,27 +1914,45 @@ export default function App() {
                       {reflections.map((ref) => (
                         <div
                           key={ref.id}
-                          className="p-3 rounded-xl bg-[#061022] border border-sky-500/20 hover:border-cyan-500/40 transition text-xs space-y-1.5"
+                          className={`p-3 rounded-xl border text-xs space-y-1.5 transition ${
+                            isLight
+                              ? 'bg-slate-50 border-slate-200 hover:border-cyan-400'
+                              : 'bg-[#061022] border-sky-500/20 hover:border-cyan-500/40'
+                          }`}
                         >
                           <div className="flex items-center justify-between">
-                            <span className="font-bold text-white text-xs flex items-center gap-1.5">
-                              <BookOpen className="w-3 h-3 text-cyan-400" />
+                            <span className={`font-bold text-xs flex items-center gap-1.5 ${
+                              isLight ? 'text-slate-900' : 'text-white'
+                            }`}>
+                              <BookOpen className={`w-3 h-3 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                               {ref.taskName}
                             </span>
-                            <div className="flex items-center gap-1 bg-cyan-950/60 px-2 py-0.5 rounded-full border border-cyan-500/30 text-cyan-300 font-bold text-[10px]">
-                              <Zap className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
+                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full border font-bold text-[10px] ${
+                              isLight
+                                ? 'bg-cyan-50 border-cyan-200 text-cyan-800'
+                                : 'bg-cyan-950/60 border-cyan-500/30 text-cyan-300'
+                            }`}>
+                              <Zap className="w-2.5 h-2.5 text-amber-500 fill-amber-500" />
                               <span>Energy: {ref.energyLevel}/5</span>
                             </div>
                           </div>
                           {ref.notes && (
-                            <p className="text-slate-300 bg-[#040914] p-2 rounded-lg border border-slate-800 text-[10px] leading-relaxed">
+                            <p className={`p-2 rounded-lg border text-[10px] leading-relaxed ${
+                              isLight
+                                ? 'bg-white border-slate-200 text-slate-700'
+                                : 'bg-[#040914] border-slate-800 text-slate-300'
+                            }`}>
                               {ref.notes}
                             </p>
                           )}
-                          <div className="flex items-center justify-between text-[9px] text-slate-500">
+                          <div className={`flex items-center justify-between text-[9px] ${
+                            isLight ? 'text-slate-500' : 'text-slate-500'
+                          }`}>
                             <div className="flex items-center gap-1">
                               {ref.tags?.map((tag) => (
-                                <span key={tag} className="px-1.5 py-0.2 rounded-full bg-slate-800 text-sky-300 font-mono">
+                                <span key={tag} className={`px-1.5 py-0.2 rounded-full font-mono ${
+                                  isLight ? 'bg-slate-200 text-slate-800 font-semibold' : 'bg-slate-800 text-sky-300'
+                                }`}>
                                   {tag}
                                 </span>
                               ))}
@@ -1843,16 +1976,23 @@ export default function App() {
                 <FocusProtocolsCard
                   currentFocusMinutes={Math.floor(totalSeconds / 60)}
                   onSelectProtocol={handleSelectProtocol}
+                  isLight={isLight}
                 />
 
                 {/* Custom Duration Slider */}
-                <div className="p-4 rounded-2xl bg-[#061022] border border-sky-500/15 space-y-2">
+                <div className={`p-4 rounded-2xl border space-y-2 ${
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
+                }`}>
                   <div className="flex items-center justify-between text-xs">
-                    <span className="text-slate-200 font-bold flex items-center gap-1.5">
-                      <Sliders className="w-3.5 h-3.5 text-cyan-400" />
+                    <span className={`font-bold flex items-center gap-1.5 ${
+                      isLight ? 'text-slate-900' : 'text-slate-200'
+                    }`}>
+                      <Sliders className={`w-3.5 h-3.5 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                       Custom Duration Slider
                     </span>
-                    <span className="text-cyan-400 font-bold font-mono text-sm">
+                    <span className={`font-bold font-mono text-sm ${
+                      isLight ? 'text-cyan-800' : 'text-cyan-400'
+                    }`}>
                       {Math.floor(totalSeconds / 60)} minutes
                     </span>
                   </div>
@@ -1863,9 +2003,13 @@ export default function App() {
                     step="5"
                     value={Math.floor(totalSeconds / 60)}
                     onChange={(e) => handleSetCustomDuration(Number(e.target.value))}
-                    className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                    className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${
+                      isLight ? 'bg-slate-200 accent-cyan-600' : 'bg-slate-800 accent-cyan-400'
+                    }`}
                   />
-                  <div className="flex justify-between text-[10px] text-slate-500 font-mono">
+                  <div className={`flex justify-between text-[10px] font-mono ${
+                    isLight ? 'text-slate-500' : 'text-slate-500'
+                  }`}>
                     <span>5m</span>
                     <span>25m (Pomodoro)</span>
                     <span>50m (OC)</span>
@@ -1875,21 +2019,31 @@ export default function App() {
                 </div>
 
                 {/* Student Distraction Shield & Anti-Cheat */}
-                <div className="p-4 rounded-2xl bg-[#061022] border border-sky-500/15 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-sky-500/15">
+                <div className={`p-4 rounded-2xl border space-y-3 ${
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
+                }`}>
+                  <div className={`flex items-center justify-between pb-2 border-b ${
+                    isLight ? 'border-slate-200' : 'border-sky-500/15'
+                  }`}>
                     <div>
-                      <h3 className="text-xs sm:text-sm font-bold text-white flex items-center gap-1.5">
-                        <ShieldAlert className="w-4 h-4 text-cyan-400" />
+                      <h3 className={`text-xs sm:text-sm font-bold flex items-center gap-1.5 ${
+                        isLight ? 'text-slate-900' : 'text-white'
+                      }`}>
+                        <ShieldAlert className={`w-4 h-4 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                         Student Distraction Shield & Focus Lock
                       </h3>
-                      <p className="text-[10px] text-sky-200/60 mt-0.5">
+                      <p className={`text-[10px] mt-0.5 ${isLight ? 'text-slate-600' : 'text-sky-200/60'}`}>
                         Blocks distracting websites and logs tab switches while studying.
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleSimulateBlock('youtube.com')}
-                      className="px-2.5 py-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/30 text-cyan-300 text-xs font-semibold cursor-pointer"
+                      className={`px-2.5 py-1 rounded-xl border text-xs font-semibold cursor-pointer ${
+                        isLight
+                          ? 'bg-cyan-50 hover:bg-cyan-100 border-cyan-300 text-cyan-800'
+                          : 'bg-cyan-500/20 hover:bg-cyan-500/30 border-cyan-500/30 text-cyan-300'
+                      }`}
                     >
                       Test Shield
                     </button>
@@ -1903,20 +2057,29 @@ export default function App() {
                     isTimerRunning={isRunning && mode === 'focus'}
                     onSimulateBlock={handleSimulateBlock}
                     distractionCount={distractionCount}
+                    isLight={isLight}
                   />
                 </div>
               </div>
             )}
 
             {/* Desktop PC Footer Bar with Shortcuts */}
-            <div className="pt-4 border-t border-sky-500/10 flex flex-wrap items-center justify-between text-[11px] text-slate-400 mt-4">
+            <div className={`pt-4 border-t flex flex-wrap items-center justify-between text-[11px] mt-4 ${
+              isLight ? 'border-slate-200 text-slate-600' : 'border-sky-500/10 text-slate-400'
+            }`}>
               <div className="flex items-center gap-3">
                 <span>PC Keyboard Shortcuts:</span>
-                <span className="font-mono bg-[#061022] border border-sky-500/20 px-1.5 py-0.5 rounded text-sky-300">Space</span> Play/Pause
-                <span className="font-mono bg-[#061022] border border-sky-500/20 px-1.5 py-0.5 rounded text-sky-300">R</span> Reset
-                <span className="font-mono bg-[#061022] border border-sky-500/20 px-1.5 py-0.5 rounded text-sky-300">E</span> +5m
+                <span className={`font-mono border px-1.5 py-0.5 rounded ${
+                  isLight ? 'bg-slate-100 border-slate-300 text-slate-800' : 'bg-[#061022] border-sky-500/20 text-sky-300'
+                }`}>Space</span> Play/Pause
+                <span className={`font-mono border px-1.5 py-0.5 rounded ${
+                  isLight ? 'bg-slate-100 border-slate-300 text-slate-800' : 'bg-[#061022] border-sky-500/20 text-sky-300'
+                }`}>R</span> Reset
+                <span className={`font-mono border px-1.5 py-0.5 rounded ${
+                  isLight ? 'bg-slate-100 border-slate-300 text-slate-800' : 'bg-[#061022] border-sky-500/20 text-sky-300'
+                }`}>E</span> +5m
               </div>
-              <span className="text-slate-500">Auto-saved to local offline storage & cloud</span>
+              <span className={isLight ? 'text-slate-500' : 'text-slate-500'}>Auto-saved to local offline storage & cloud</span>
             </div>
           </div>
         </div>
@@ -1927,15 +2090,25 @@ export default function App() {
       {/* 1. Website Blocker Modal */}
       {showBlockerModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
-          <div className="relative w-full max-w-md p-6 rounded-3xl bg-[#08152c] border border-sky-500/25 shadow-2xl text-slate-200">
-            <div className="flex items-center justify-between pb-3 border-b border-sky-500/15">
-              <div className="flex items-center gap-2 font-bold text-white text-base">
-                <Shield className="w-5 h-5 text-cyan-400" />
+          <div className={`relative w-full max-w-md p-6 rounded-3xl border shadow-2xl ${
+            isLight
+              ? 'bg-white border-slate-200 text-slate-800'
+              : 'bg-[#08152c] border-sky-500/25 text-slate-200'
+          }`}>
+            <div className={`flex items-center justify-between pb-3 border-b ${
+              isLight ? 'border-slate-200' : 'border-sky-500/15'
+            }`}>
+              <div className={`flex items-center gap-2 font-bold text-base ${
+                isLight ? 'text-slate-900' : 'text-white'
+              }`}>
+                <Shield className={`w-5 h-5 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
                 Student Distraction Blocker
               </div>
               <button
                 onClick={() => setShowBlockerModal(false)}
-                className="text-slate-400 hover:text-white text-xs px-2 py-1 rounded-lg hover:bg-slate-800 cursor-pointer"
+                className={`text-xs px-2 py-1 rounded-lg cursor-pointer ${
+                  isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
               >
                 ✕
               </button>
@@ -1949,6 +2122,7 @@ export default function App() {
                 isTimerRunning={isRunning && mode === 'focus'}
                 onSimulateBlock={handleSimulateBlock}
                 distractionCount={distractionCount}
+                isLight={isLight}
               />
             </div>
           </div>
@@ -1965,6 +2139,7 @@ export default function App() {
           setSimulatedBlockedDomain(null);
           addAlert('60s Bypass Activated', 'Remember to return to your study material after checking.', 'milestone');
         }}
+        isLight={isLight}
       />
 
       {/* 3. Extend and Restore Mode Modal */}
@@ -1976,6 +2151,7 @@ export default function App() {
         hasSavedSnapshot={Boolean(savedSnapshot)}
         lastSnapshot={savedSnapshot}
         remainingSeconds={remainingSeconds}
+        isLight={isLight}
       />
 
       {/* 4. Cross-Device Cloud Sync Modal */}
@@ -1986,6 +2162,7 @@ export default function App() {
         onTriggerSync={handleTriggerSync}
         onUpdateSyncCode={handleUpdateSyncCode}
         offlineQueueCount={offlineQueueCount}
+        isLight={isLight}
       />
 
       {/* 5. Statistics & Productivity Dashboard Modal */}
@@ -1995,6 +2172,7 @@ export default function App() {
         sessions={sessions}
         goalMinutes={settings.dailyGoalMinutes}
         distractionCount={distractionCount}
+        isLight={isLight}
       />
 
       {/* 6. Milestone & Celebration Notification Toast */}
@@ -2017,6 +2195,7 @@ export default function App() {
         onExtend={handleExtend}
         onSetCustomDuration={handleSetCustomDuration}
         strictAntiCheatMode={strictAntiCheatMode}
+        isLight={isLight}
       />
 
       {/* 8. Strict Mode / Focus Lock (Anti-Cheat Protection Modal) */}
@@ -2026,6 +2205,7 @@ export default function App() {
         strayDurationSeconds={strayDurationSeconds}
         totalViolationsCount={totalViolationsCount}
         currentTaskName={activeTaskName}
+        isLight={isLight}
       />
 
       {/* 9. Global System Reset Confirmation Modal */}
@@ -2033,15 +2213,17 @@ export default function App() {
         isOpen={showSystemResetModal}
         onClose={() => setShowSystemResetModal(false)}
         onConfirmReset={handleConfirmSystemReset}
+        isLight={isLight}
       />
 
       {/* 10. Study Session Reflection & Energy Journaling Modal */}
       <ReflectionModal
         isOpen={showReflectionModal}
         onClose={() => setShowReflectionModal(false)}
-        taskName={activeTaskName}
-        sessionDurationMinutes={Math.max(1, Math.round(totalSeconds / 60))}
-        onSaveReflection={handleSaveReflection}
+        currentTaskName={activeTaskName}
+        sessionMinutes={Math.max(1, Math.round(totalSeconds / 60))}
+        onSave={handleSaveReflection}
+        isLight={isLight}
       />
 
       {/* 11. Mini Floating Picture-in-Picture Sticky Timer with Hide & Undo */}
@@ -2058,6 +2240,7 @@ export default function App() {
           canUndoExtend={!!lastExtensionMinutes}
           onOpenZen={() => setShowZenSanctuary(true)}
           onHide={handleHideFloatingDock}
+          isLight={isLight}
         />
       )}
 
@@ -2072,6 +2255,7 @@ export default function App() {
           pullAccountSync(token, false);
           addAlert('Account Connected', `Welcome, ${user.name}! Workspace synchronized across your devices.`, 'milestone');
         }}
+        isLight={isLight}
       />
 
       {/* 13. System Settings Modal (Change Password, Day/Light Mode, Multi-Device Auto Sync) */}
@@ -2106,17 +2290,25 @@ export default function App() {
         <aside
           role="status"
           aria-live="polite"
-          className="fixed bottom-5 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-40 select-none flex items-center gap-3 px-3.5 py-2.5 rounded-2xl bg-[#061022]/95 border border-cyan-500/40 text-white shadow-[0_15px_40px_rgba(0,0,0,0.85)] backdrop-blur-2xl animate-in slide-in-from-bottom-4 duration-300"
+          className={`fixed bottom-5 left-1/2 -translate-x-1/2 sm:left-auto sm:right-5 sm:translate-x-0 z-40 select-none flex items-center gap-3 px-3.5 py-2.5 rounded-2xl border backdrop-blur-2xl animate-in slide-in-from-bottom-4 duration-300 ${
+            isLight
+              ? 'bg-[#edf5f7] border-slate-300 text-slate-900 shadow-[0_15px_35px_rgba(0,0,0,0.15)]'
+              : 'bg-[#061022]/95 border-cyan-500/40 text-white shadow-[0_15px_40px_rgba(0,0,0,0.85)]'
+          }`}
         >
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-slate-500" />
-            <span className="text-xs text-slate-300 font-medium">Floating dock hidden</span>
+            <span className={`w-2 h-2 rounded-full ${isLight ? 'bg-slate-400' : 'bg-slate-500'}`} />
+            <span className={`text-xs font-medium ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>Floating dock hidden</span>
           </div>
 
           <button
             type="button"
             onClick={handleUndoHideFloatingDock}
-            className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/40 text-cyan-300 font-bold text-xs cursor-pointer transition shadow-sm"
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border font-bold text-xs cursor-pointer transition shadow-sm ${
+              isLight
+                ? 'bg-cyan-500 hover:bg-cyan-400 border-cyan-500 text-slate-950'
+                : 'bg-cyan-500/20 hover:bg-cyan-500/30 border-cyan-500/40 text-cyan-300'
+            }`}
             title="Restore Floating Timer"
           >
             <RotateCcw className="w-3 h-3" />
@@ -2126,7 +2318,9 @@ export default function App() {
           <button
             type="button"
             onClick={() => setShowHideUndoToast(false)}
-            className="text-slate-400 hover:text-white p-1 rounded-md transition cursor-pointer"
+            className={`p-1 rounded-md transition cursor-pointer ${
+              isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+            }`}
             title="Dismiss Notification"
           >
             <X className="w-3.5 h-3.5" />

@@ -39,7 +39,7 @@ export const NotificationToast: React.FC<NotificationToastProps> = ({ alerts, on
         >
           <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400 shrink-0">
             {alert.type === 'goal_completed' ? (
-              <Trophy className="w-5 h-5 text-amber-400" />
+              <Trophy className="w-5 h-5 text-cyan-400" />
             ) : alert.type === 'session_finished' ? (
               <Award className="w-5 h-5 text-emerald-400" />
             ) : (

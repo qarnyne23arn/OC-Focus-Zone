@@ -114,7 +114,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         id="settings-modal-container"
         className={`relative w-full max-w-2xl rounded-3xl border shadow-[0_25px_70px_rgba(0,0,0,0.85)] p-6 sm:p-8 overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${
           isLight
-            ? 'bg-white border-slate-200 text-slate-900'
+            ? 'bg-[#edf5f7] border-slate-300 text-slate-900'
             : 'bg-[#061022] border-sky-500/20 text-slate-100'
         }`}
       >
@@ -123,7 +123,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Modal Header */}
         <div className={`flex items-center justify-between pb-4 border-b mb-6 ${
-          isLight ? 'border-slate-200' : 'border-slate-800/80'
+          isLight ? 'border-slate-300' : 'border-slate-800/80'
         }`}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-black border border-cyan-500/40 p-1 flex items-center justify-center overflow-hidden">
@@ -140,7 +140,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               }`}>
                 System Settings
               </h2>
-              <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                 Account credentials, day/night mode, and multi-device auto-sync
               </p>
             </div>
@@ -150,7 +150,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             onClick={onClose}
             className={`p-2 rounded-full transition cursor-pointer ${
               isLight
-                ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
+                ? 'text-slate-600 hover:text-slate-900 hover:bg-[#dce9ed]'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
             title="Close settings"
@@ -161,7 +161,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Settings Navigation Tabs */}
         <div className={`grid grid-cols-4 p-1 rounded-2xl border mb-6 ${
-          isLight ? 'bg-slate-100 border-slate-200' : 'bg-slate-900/90 border-slate-800'
+          isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/90 border-slate-800'
         }`}>
           <button
             type="button"
@@ -225,7 +225,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <>
                   {/* User Profile Card */}
                   <div className={`p-4 rounded-2xl border flex items-center justify-between gap-4 ${
-                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/70 border-slate-800'
+                    isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/70 border-slate-800'
                   }`}>
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-cyan-600 to-blue-500 text-slate-950 font-black text-lg flex items-center justify-center uppercase shadow-md">
@@ -236,11 +236,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           isLight ? 'text-slate-900' : 'text-white'
                         }`}>
                           <span>{currentUser.name || 'Student'}</span>
-                          <span className="text-[10px] bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30 font-semibold">
+                          <span className="text-[10px] bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-500/30 font-semibold">
                             Active Account
                           </span>
                         </div>
-                        <div className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <div className={`text-xs font-mono ${isLight ? 'text-slate-600 font-semibold' : 'text-slate-400'}`}>
                           {currentUser.email}
                         </div>
                       </div>
@@ -258,15 +258,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                   {/* Change Password Section */}
                   <div className={`p-5 rounded-2xl border space-y-4 ${
-                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/50 border-slate-800'
+                    isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/50 border-slate-800'
                   }`}>
                     <div className="flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-cyan-500" />
+                      <Lock className="w-4 h-4 text-cyan-600 dark:text-cyan-500" />
                       <h3 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         Change Account Password
                       </h3>
                     </div>
-                    <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                    <p className={`text-xs ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
                       Update your login password to secure cross-device access.
                     </p>
 
@@ -287,7 +287,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <form onSubmit={handlePasswordSubmit} className="space-y-3">
                       <div>
                         <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                          isLight ? 'text-slate-700' : 'text-slate-300'
+                          isLight ? 'text-slate-800' : 'text-slate-300'
                         }`}>
                           Current Password
                         </label>
@@ -297,9 +297,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                           value={currentPassword}
                           onChange={(e) => setCurrentPassword(e.target.value)}
                           placeholder="••••••••"
-                          className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-400 transition ${
+                          className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-500 transition ${
                             isLight
-                              ? 'bg-white border border-slate-300 text-slate-900 placeholder-slate-400'
+                              ? 'bg-[#edf5f7] border border-slate-300 text-slate-900 placeholder-slate-500'
                               : 'bg-slate-900 border border-slate-700 text-white placeholder-slate-500'
                           }`}
                         />
@@ -308,7 +308,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
                           <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                            isLight ? 'text-slate-700' : 'text-slate-300'
+                            isLight ? 'text-slate-800' : 'text-slate-300'
                           }`}>
                             New Password
                           </label>
@@ -318,16 +318,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             value={newPassword}
                             onChange={(e) => setNewPassword(e.target.value)}
                             placeholder="Min. 6 characters"
-                            className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-400 transition ${
+                            className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-500 transition ${
                               isLight
-                                ? 'bg-white border border-slate-300 text-slate-900 placeholder-slate-400'
+                                ? 'bg-[#edf5f7] border border-slate-300 text-slate-900 placeholder-slate-500'
                                 : 'bg-slate-900 border border-slate-700 text-white placeholder-slate-500'
                             }`}
                           />
                         </div>
                         <div>
                           <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                            isLight ? 'text-slate-700' : 'text-slate-300'
+                            isLight ? 'text-slate-800' : 'text-slate-300'
                           }`}>
                             Confirm New Password
                           </label>
@@ -337,9 +337,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                             value={confirmNewPassword}
                             onChange={(e) => setConfirmNewPassword(e.target.value)}
                             placeholder="Confirm password"
-                            className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-400 transition ${
+                            className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-500 transition ${
                               isLight
-                                ? 'bg-white border border-slate-300 text-slate-900 placeholder-slate-400'
+                                ? 'bg-[#edf5f7] border border-slate-300 text-slate-900 placeholder-slate-500'
                                 : 'bg-slate-900 border border-slate-700 text-white placeholder-slate-500'
                             }`}
                           />
@@ -366,16 +366,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               ) : (
                 /* Not Logged In State */
                 <div className={`p-6 rounded-2xl border text-center space-y-4 ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-800'
+                  isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/60 border-slate-800'
                 }`}>
-                  <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 mx-auto flex items-center justify-center text-cyan-400">
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 mx-auto flex items-center justify-center text-cyan-600 dark:text-cyan-400">
                     <User className="w-6 h-6" />
                   </div>
                   <div>
                     <h3 className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       You are using Guest Mode
                     </h3>
-                    <p className={`text-xs mt-1 max-w-sm mx-auto ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                    <p className={`text-xs mt-1 max-w-sm mx-auto ${isLight ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>
                       Create an account or sign in to save your sessions and auto-sync tasks across multiple devices.
                     </p>
                   </div>
@@ -401,7 +401,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 <h3 className={`text-sm font-bold mb-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   Color Theme Selection
                 </h3>
-                <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                <p className={`text-xs ${isLight ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>
                   Switch between Daylight mode for bright ambient environments and Dark mode for deep nighttime flow.
                 </p>
               </div>
@@ -414,7 +414,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   className={`p-5 rounded-2xl border text-left transition cursor-pointer relative overflow-hidden group ${
                     !isLight
                       ? 'bg-[#02050e] border-cyan-400 ring-2 ring-cyan-400/40 shadow-[0_0_25px_rgba(6,182,212,0.2)]'
-                      : 'bg-slate-100/70 border-slate-300 hover:border-slate-400'
+                      : 'bg-[#dce9ed] border-slate-300 hover:border-slate-400'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-3">
@@ -430,7 +430,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>
                     Night Sanctuary (Dark)
                   </div>
-                  <p className={`text-xs mt-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  <p className={`text-xs mt-1 ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
                     Deep cosmic obsidian theme with glowing electric blue sand clock and minimal eye strain.
                   </p>
                 </button>
@@ -441,12 +441,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   onClick={() => handleThemeChange('light')}
                   className={`p-5 rounded-2xl border text-left transition cursor-pointer relative overflow-hidden group ${
                     isLight
-                      ? 'bg-slate-50 border-cyan-500 ring-2 ring-cyan-500/40 shadow-[0_0_25px_rgba(6,182,212,0.2)]'
+                      ? 'bg-[#dce9ed] border-cyan-600 ring-2 ring-cyan-500/50 shadow-[0_0_25px_rgba(6,182,212,0.25)]'
                       : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-cyan-600 shadow-inner">
+                    <div className="w-10 h-10 rounded-xl bg-[#cbe0e7] border border-cyan-400 flex items-center justify-center text-cyan-800 shadow-inner">
                       <Sun className="w-5 h-5" />
                     </div>
                     {isLight && (
@@ -456,8 +456,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     )}
                   </div>
                   <div className="font-bold text-sm text-slate-900">Day Mode (Light)</div>
-                  <p className="text-xs text-slate-600 mt-1">
-                    Crisp, high-contrast light theme with clean slate framing and dark text for daytime study.
+                  <p className="text-xs text-slate-700 font-medium mt-1">
+                    Crisp, high-contrast light theme with #edf5f7 canvas and deep readable text for daytime study.
                   </p>
                 </button>
               </div>
@@ -467,18 +467,22 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           {/* TAB 3: MULTI-DEVICE AUTO-SYNC */}
           {activeTab === 'sync' && (
             <div className="space-y-6 animate-in fade-in duration-200">
-              <div className="p-4 rounded-2xl bg-cyan-500/10 border border-cyan-500/25 space-y-2">
-                <div className="flex items-center gap-2 text-cyan-400 font-bold text-sm">
+              <div className={`p-4 rounded-2xl border space-y-2 ${
+                isLight ? 'bg-[#dce9ed] border-cyan-400/40' : 'bg-cyan-500/10 border-cyan-500/25'
+              }`}>
+                <div className={`flex items-center gap-2 font-bold text-sm ${
+                  isLight ? 'text-cyan-900' : 'text-cyan-400'
+                }`}>
                   <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                   <span>Real-Time Multi-Device Auto Sync</span>
                 </div>
-                <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-700' : 'text-cyan-200/80'}`}>
+                <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-800' : 'text-cyan-200/80'}`}>
                   Sign in with the same account on your second laptop, tablet, or phone. All study sessions, daily goals, active tasks, and blocked distractions automatically synchronize across devices.
                 </p>
               </div>
 
               <div className={`p-5 rounded-2xl border space-y-4 ${
-                isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-900/60 border-slate-800'
+                isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/60 border-slate-800'
               }`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
@@ -487,30 +491,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       Auto-Sync Engine Status
                     </span>
                   </div>
-                  <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <span className={`text-xs font-mono ${isLight ? 'text-slate-600 font-semibold' : 'text-slate-400'}`}>
                     {lastSyncedAt ? `Last synced: ${new Date(lastSyncedAt).toLocaleTimeString()}` : 'Ready to sync'}
                   </span>
                 </div>
 
                 <div className={`grid grid-cols-2 gap-3 pt-2 border-t ${
-                  isLight ? 'border-slate-200' : 'border-slate-800'
+                  isLight ? 'border-slate-300' : 'border-slate-800'
                 }`}>
                   <div className={`p-3 rounded-xl border flex items-center gap-3 ${
-                    isLight ? 'bg-white border-slate-200' : 'bg-slate-950/60 border-slate-800'
+                    isLight ? 'bg-[#edf5f7] border-slate-300' : 'bg-slate-950/60 border-slate-800'
                   }`}>
-                    <Laptop className="w-5 h-5 text-sky-500" />
+                    <Laptop className="w-5 h-5 text-sky-600 dark:text-sky-500" />
                     <div>
                       <div className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>Primary Computer</div>
-                      <div className="text-[11px] text-emerald-500 font-medium">Connected & Synced</div>
+                      <div className="text-[11px] text-emerald-600 dark:text-emerald-500 font-bold">Connected & Synced</div>
                     </div>
                   </div>
                   <div className={`p-3 rounded-xl border flex items-center gap-3 ${
-                    isLight ? 'bg-white border-slate-200' : 'bg-slate-950/60 border-slate-800'
+                    isLight ? 'bg-[#edf5f7] border-slate-300' : 'bg-slate-950/60 border-slate-800'
                   }`}>
-                    <Smartphone className="w-5 h-5 text-cyan-500" />
+                    <Smartphone className="w-5 h-5 text-cyan-600 dark:text-cyan-500" />
                     <div>
                       <div className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>Mobile / Tablet</div>
-                      <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Auto-sync on login</div>
+                      <div className={`text-[11px] ${isLight ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>Auto-sync on login</div>
                     </div>
                   </div>
                 </div>
@@ -533,7 +537,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         onClose();
                         onOpenAuth();
                       }}
-                      className="text-xs text-cyan-600 hover:underline font-semibold cursor-pointer"
+                      className={`text-xs hover:underline font-bold cursor-pointer ${
+                        isLight ? 'text-cyan-800' : 'text-cyan-400'
+                      }`}
                     >
                       Sign in to enable cloud sync
                     </button>
@@ -549,7 +555,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                    isLight ? 'text-slate-700' : 'text-slate-300'
+                    isLight ? 'text-slate-800' : 'text-slate-300'
                   }`}>
                     Focus Duration (Minutes)
                   </label>
@@ -564,9 +570,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         focusDurationMinutes: Math.max(1, Number(e.target.value)),
                       })
                     }
-                    className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-400 transition ${
+                    className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-500 transition ${
                       isLight
-                        ? 'bg-white border border-slate-300 text-slate-900'
+                        ? 'bg-[#edf5f7] border border-slate-300 text-slate-900'
                         : 'bg-slate-900 border border-slate-700 text-white'
                     }`}
                   />
@@ -574,7 +580,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 <div>
                   <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                    isLight ? 'text-slate-700' : 'text-slate-300'
+                    isLight ? 'text-slate-800' : 'text-slate-300'
                   }`}>
                     Short Break (Minutes)
                   </label>
@@ -589,9 +595,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         shortBreakMinutes: Math.max(1, Number(e.target.value)),
                       })
                     }
-                    className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-400 transition ${
+                    className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-500 transition ${
                       isLight
-                        ? 'bg-white border border-slate-300 text-slate-900'
+                        ? 'bg-[#edf5f7] border border-slate-300 text-slate-900'
                         : 'bg-slate-900 border border-slate-700 text-white'
                     }`}
                   />
@@ -599,7 +605,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
                 <div>
                   <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                    isLight ? 'text-slate-700' : 'text-slate-300'
+                    isLight ? 'text-slate-800' : 'text-slate-300'
                   }`}>
                     Daily Goal (Minutes)
                   </label>
@@ -615,25 +621,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         dailyGoalMinutes: Math.max(10, Number(e.target.value)),
                       })
                     }
-                    className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-400 transition ${
+                    className={`w-full px-3.5 py-2 rounded-xl text-sm focus:outline-none focus:border-cyan-500 transition ${
                       isLight
-                        ? 'bg-white border border-slate-300 text-slate-900'
+                        ? 'bg-[#edf5f7] border border-slate-300 text-slate-900'
                         : 'bg-slate-900 border border-slate-700 text-white'
                     }`}
                   />
                 </div>
 
                 <div className={`flex items-center justify-between p-3 rounded-xl border ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-900 border-slate-800'
+                  isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900 border-slate-800'
                 }`}>
                   <div>
                     <div className={`text-xs font-bold flex items-center gap-1.5 ${
                       isLight ? 'text-slate-900' : 'text-white'
                     }`}>
-                      <ShieldAlert className="w-3.5 h-3.5 text-cyan-500" />
+                      <ShieldAlert className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-500" />
                       Strict Anti-Cheat
                     </div>
-                    <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    <div className={`text-[11px] ${isLight ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
                       Lock tab switching
                     </div>
                   </div>

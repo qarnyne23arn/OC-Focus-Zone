@@ -17,13 +17,13 @@ export const SandClockLogo: React.FC<SandClockLogoProps> = ({
       style={{ width: size, height: size }}
     >
       {showGlow && (
-        <div className="absolute inset-0 bg-amber-500/30 rounded-full blur-xl animate-pulse pointer-events-none" />
+        <div className="absolute inset-0 bg-cyan-500/30 rounded-full blur-xl animate-pulse pointer-events-none" />
       )}
       <img
         src="/sandclock.svg"
         alt="OC Sand Clock Logo"
         referrerPolicy="no-referrer"
-        className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(245,158,11,0.7)]"
+        className="w-full h-full object-contain filter drop-shadow-[0_0_12px_rgba(6,182,212,0.7)]"
       />
     </div>
   );

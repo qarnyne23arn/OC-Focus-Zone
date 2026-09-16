@@ -108,20 +108,20 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
       return {
         strokeGradientStart: '#059669',
         strokeGradientEnd: '#34d399',
-        textColor: 'text-emerald-300',
+        textColor: isLight ? 'text-emerald-800' : 'text-emerald-300',
       };
     }
     if (mode === 'long_break') {
       return {
         strokeGradientStart: '#7c3aed',
         strokeGradientEnd: '#c084fc',
-        textColor: 'text-purple-300',
+        textColor: isLight ? 'text-purple-800' : 'text-purple-300',
       };
     }
     return {
       strokeGradientStart: '#0077ff',
       strokeGradientEnd: '#38bdf8',
-      textColor: 'text-sky-300',
+      textColor: isLight ? 'text-cyan-800' : 'text-sky-300',
     };
   };
 
@@ -165,11 +165,11 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
               </feMerge>
             </filter>
 
-            {/* Subtle inner dark gradient */}
+            {/* Subtle inner dial face gradient */}
             <radialGradient id="timerFaceGradient" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#071224" />
-              <stop offset="85%" stopColor="#091730" />
-              <stop offset="100%" stopColor="#050e1e" />
+              <stop offset="0%" stopColor={isLight ? "#f8fafc" : "#071224"} />
+              <stop offset="85%" stopColor={isLight ? "#f1f5f9" : "#091730"} />
+              <stop offset="100%" stopColor={isLight ? "#e2e8f0" : "#050e1e"} />
             </radialGradient>
           </defs>
 
@@ -182,10 +182,10 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
                 y1={t.y1}
                 x2={t.x2}
                 y2={t.y2}
-                stroke={t.isMajor ? '#38bdf8' : '#1e3a5f'}
+                stroke={t.isMajor ? (isLight ? '#0284c7' : '#38bdf8') : (isLight ? '#94a3b8' : '#1e3a5f')}
                 strokeWidth={t.isMajor ? 2 : 1.2}
                 strokeLinecap="round"
-                opacity={t.isMajor ? 0.9 : 0.45}
+                opacity={t.isMajor ? 0.95 : (isLight ? 0.75 : 0.45)}
               />
             ))}
           </g>
@@ -196,9 +196,9 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
             cy={center}
             r={progressRadius}
             fill="none"
-            stroke="#0b2244"
+            stroke={isLight ? "#cbd5e1" : "#0b2244"}
             strokeWidth="10"
-            opacity="0.6"
+            opacity={isLight ? "0.8" : "0.6"}
           />
 
           {/* 3. Glowing Progress Arc (Cyan/Electric Blue) */}
@@ -223,7 +223,7 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
             cy={center}
             r={innerRingRadius + 14}
             fill="url(#timerFaceGradient)"
-            stroke="#163259"
+            stroke={isLight ? "#cbd5e1" : "#163259"}
             strokeWidth="1.5"
             className="cursor-pointer"
             onClick={onToggle}
@@ -235,10 +235,10 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
             cy={center}
             r={innerRingRadius}
             fill="none"
-            stroke="#1d3f6d"
+            stroke={isLight ? "#94a3b8" : "#1d3f6d"}
             strokeWidth="1"
             strokeDasharray="2 4"
-            opacity="0.6"
+            opacity={isLight ? "0.8" : "0.6"}
             className="pointer-events-none"
           />
 
@@ -253,9 +253,9 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
                     y={m.y}
                     textAnchor="middle"
                     dominantBaseline="central"
-                    fill="#94a3b8"
+                    fill={isLight ? '#334155' : '#94a3b8'}
                     fontSize="13"
-                    fontWeight="600"
+                    fontWeight="700"
                     fontFamily="Plus Jakarta Sans, sans-serif"
                     className="select-none"
                   >
@@ -269,8 +269,8 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
                   cx={m.x}
                   cy={m.y}
                   r="1.75"
-                  fill="#64748b"
-                  opacity="0.8"
+                  fill={isLight ? '#64748b' : '#64748b'}
+                  opacity={isLight ? '0.9' : '0.8'}
                 />
               );
             })}
@@ -286,7 +286,11 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
                 type="button"
                 id="timer-digital-display"
                 onClick={onToggle}
-                className="text-5xl sm:text-6xl font-extrabold text-white tracking-tight drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] font-['Plus_Jakarta_Sans'] cursor-pointer hover:text-cyan-200 transition"
+                className={`text-5xl sm:text-6xl font-extrabold tracking-tight font-['Plus_Jakarta_Sans'] cursor-pointer transition ${
+                  isLight
+                    ? 'text-slate-900 hover:text-cyan-700'
+                    : 'text-white hover:text-cyan-200 drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]'
+                }`}
                 title={isRunning ? "Click to Pause" : "Click to Start"}
               >
                 {timeDisplay}
@@ -297,14 +301,18 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
             <div className="mt-1 flex items-center gap-1.5">
               <div 
                 onClick={onToggle}
-                className="px-2.5 py-0.5 rounded-full bg-slate-900/70 border border-slate-700/50 text-[11px] font-medium tracking-wide flex items-center gap-1.5 shadow-sm cursor-pointer hover:border-sky-500/50 transition"
+                className={`px-2.5 py-0.5 rounded-full text-[11px] font-medium tracking-wide flex items-center gap-1.5 shadow-sm cursor-pointer transition ${
+                  isLight
+                    ? 'bg-slate-100 border border-slate-300 text-slate-800 hover:border-cyan-500'
+                    : 'bg-slate-900/70 border border-slate-700/50 hover:border-sky-500/50'
+                }`}
               >
                 <span 
                   className={`w-1.5 h-1.5 rounded-full ${
-                    isRunning ? 'bg-sky-400 animate-pulse' : 'bg-slate-400'
+                    isRunning ? 'bg-sky-500 animate-pulse' : 'bg-slate-400'
                   }`} 
                 />
-                <span className={colors.textColor}>
+                <span className={`font-semibold ${colors.textColor}`}>
                   {isRunning ? (mode === 'focus' ? 'Studying...' : 'On Break') : 'Paused (Click to Start)'}
                 </span>
               </div>
@@ -318,7 +326,11 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
                     setInputMinutes(Math.floor(totalSeconds / 60));
                     setIsEditingTime(true);
                   }}
-                  className="p-1 rounded-full bg-sky-500/10 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 hover:text-white transition cursor-pointer"
+                  className={`p-1 rounded-full border transition cursor-pointer ${
+                    isLight
+                      ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700'
+                      : 'bg-sky-500/10 hover:bg-sky-500/25 border-sky-500/30 text-sky-300 hover:text-white'
+                  }`}
                   title="Set Timer Duration (Customize Minutes)"
                 >
                   <Edit3 className="w-3 h-3" />
@@ -329,10 +341,16 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
         ) : (
           /* Inline Custom Time Setter Popover (Inside the dial face!) */
           <div 
-            className="absolute inset-0 flex flex-col items-center justify-center p-4 bg-[#071329]/95 rounded-full border border-cyan-500/40 backdrop-blur-md z-20"
+            className={`absolute inset-0 flex flex-col items-center justify-center p-4 rounded-full border backdrop-blur-md z-20 ${
+              isLight
+                ? 'bg-white/95 border-cyan-500/40 text-slate-800 shadow-2xl'
+                : 'bg-[#071329]/95 border-cyan-500/40 text-white'
+            }`}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-[11px] font-semibold text-cyan-300 flex items-center gap-1 mb-1">
+            <div className={`text-[11px] font-semibold flex items-center gap-1 mb-1 ${
+              isLight ? 'text-cyan-800' : 'text-cyan-300'
+            }`}>
               <Clock className="w-3 h-3" /> Set Focus Time
             </div>
 
@@ -341,7 +359,11 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
               <button
                 type="button"
                 onClick={() => setInputMinutes((m) => Math.max(1, m - 5))}
-                className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
+                className={`p-1 rounded-lg cursor-pointer transition ${
+                  isLight
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                }`}
                 title="-5 minutes"
               >
                 <Minus className="w-3.5 h-3.5" />
@@ -354,16 +376,24 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
                   max="180"
                   value={inputMinutes}
                   onChange={(e) => setInputMinutes(Number(e.target.value))}
-                  className="w-16 text-center text-3xl font-extrabold text-white bg-transparent border-b border-cyan-400 focus:outline-none font-mono"
+                  className={`w-16 text-center text-3xl font-extrabold bg-transparent border-b focus:outline-none font-mono ${
+                    isLight
+                      ? 'text-slate-900 border-cyan-500'
+                      : 'text-white border-cyan-400'
+                  }`}
                   autoFocus
                 />
-                <span className="text-xs text-sky-300 ml-1">min</span>
+                <span className={`text-xs ml-1 ${isLight ? 'text-slate-600' : 'text-sky-300'}`}>min</span>
               </div>
 
               <button
                 type="button"
                 onClick={() => setInputMinutes((m) => Math.min(180, m + 5))}
-                className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 cursor-pointer"
+                className={`p-1 rounded-lg cursor-pointer transition ${
+                  isLight
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-200'
+                }`}
                 title="+5 minutes"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -380,7 +410,9 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
                   className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition cursor-pointer ${
                     inputMinutes === preset
                       ? 'bg-cyan-500 text-white font-bold'
-                      : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
+                      : isLight
+                        ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                        : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
                   }`}
                 >
                   {preset}m
@@ -393,14 +425,18 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
               <button
                 type="button"
                 onClick={handleSaveCustomTime}
-                className="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-white font-bold text-xs flex items-center gap-1 shadow cursor-pointer"
+                className="px-3 py-1 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1 shadow cursor-pointer transition"
               >
-                <Check className="w-3 h-3" /> Apply
+                <Check className="w-3 h-3 stroke-[2.5]" /> Apply
               </button>
               <button
                 type="button"
                 onClick={() => setIsEditingTime(false)}
-                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs cursor-pointer"
+                className={`px-2.5 py-1 rounded-lg text-xs cursor-pointer transition ${
+                  isLight
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 border border-slate-200'
+                    : 'bg-slate-800 hover:bg-slate-700 text-slate-300'
+                }`}
               >
                 <X className="w-3 h-3" />
               </button>

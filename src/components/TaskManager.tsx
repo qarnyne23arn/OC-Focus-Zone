@@ -42,21 +42,21 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
   };
 
   return (
-    <div className={`w-full space-y-3.5 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+    <div className={`w-full space-y-3.5 ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
       {/* 1. Active Focus Task Card with Inline Edit */}
       <div className={`p-4 rounded-2xl border shadow-sm ${
         isLight
-          ? 'bg-slate-50 border-slate-200'
+          ? 'bg-[#dce9ed] border-slate-300'
           : 'bg-gradient-to-r from-[#091a38] to-[#071328] border-cyan-500/30'
       }`}>
         <div className="flex items-center justify-between text-[11px] mb-1.5">
           <span className={`flex items-center gap-1.5 font-bold uppercase tracking-wider ${
-            isLight ? 'text-cyan-700' : 'text-cyan-400'
+            isLight ? 'text-cyan-800' : 'text-cyan-400'
           }`}>
             <Sparkles className="w-3.5 h-3.5" />
             Enter Task
           </span>
-          <span className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Click to edit</span>
+          <span className={`text-[10px] ${isLight ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>Click to edit</span>
         </div>
 
         {isEditingActiveName ? (
@@ -72,7 +72,7 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
               placeholder="Enter task name..."
               className={`flex-1 px-3 py-1.5 rounded-xl text-sm font-semibold focus:outline-none ${
                 isLight
-                  ? 'bg-white border border-slate-300 text-slate-900 placeholder-slate-400'
+                  ? 'bg-[#edf5f7] border border-slate-300 text-slate-900 placeholder-slate-500'
                   : 'bg-[#061022] border border-cyan-400 text-white placeholder-slate-500'
               }`}
               autoFocus
@@ -93,15 +93,15 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
               setIsEditingActiveName(true);
             }}
             className={`flex items-center justify-between group cursor-pointer p-1 -m-1 rounded-lg transition ${
-              isLight ? 'hover:bg-cyan-50' : 'hover:bg-sky-500/10'
+              isLight ? 'hover:bg-[#cfe0e6]' : 'hover:bg-sky-500/10'
             }`}
           >
             <div className="flex items-center gap-2 min-w-0">
-              <BookOpen className={`w-4 h-4 shrink-0 ${isLight ? 'text-cyan-600' : 'text-cyan-400'}`} />
+              <BookOpen className={`w-4 h-4 shrink-0 ${isLight ? 'text-cyan-800' : 'text-cyan-400'}`} />
               <span className={`font-bold text-base truncate tracking-tight ${
                 activeTaskName 
                   ? isLight ? 'text-slate-900' : 'text-white'
-                  : isLight ? 'text-slate-400 italic' : 'text-slate-400 italic'
+                  : isLight ? 'text-slate-500 italic' : 'text-slate-400 italic'
               }`}>
                 {activeTaskName || 'Enter Task'}
               </span>
@@ -109,7 +109,7 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
             <button
               type="button"
               className={`opacity-70 group-hover:opacity-100 p-1 rounded transition cursor-pointer ${
-                isLight ? 'text-cyan-700 hover:bg-cyan-100' : 'text-cyan-300 hover:bg-cyan-500/20'
+                isLight ? 'text-cyan-800 hover:bg-[#b8d4de]' : 'text-cyan-300 hover:bg-cyan-500/20'
               }`}
               title="Edit Task Name"
             >
@@ -122,10 +122,10 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
       {/* 2. Quick Task List & Switcher */}
       <div className="space-y-2">
         <div className={`flex items-center justify-between text-xs font-semibold px-1 ${
-          isLight ? 'text-slate-800' : 'text-slate-300'
+          isLight ? 'text-slate-900 font-bold' : 'text-slate-300'
         }`}>
           <span>Study Tasks & Goals</span>
-          <span className={`text-[11px] font-normal ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+          <span className={`text-[11px] font-normal ${isLight ? 'text-slate-600 font-semibold' : 'text-slate-500'}`}>
             {tasks.filter((t) => t.completed).length} / {tasks.length} done
           </span>
         </div>
@@ -135,7 +135,7 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
           {tasks.length === 0 ? (
             <div className={`p-4 rounded-xl border text-center text-xs ${
               isLight
-                ? 'bg-slate-50 border-slate-200 text-slate-600'
+                ? 'bg-[#edf5f7] border-slate-300 text-slate-700'
                 : 'bg-[#08152c]/50 border-sky-500/10 text-slate-400'
             }`}>
               No tasks added yet. Enter your task below to get started.
@@ -149,10 +149,10 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
                   className={`p-2.5 rounded-xl border flex items-center justify-between transition-all ${
                     isActive
                       ? isLight
-                        ? 'bg-cyan-50 border-cyan-400 shadow-sm'
+                        ? 'bg-[#dce9ed] border-cyan-500 shadow-sm'
                         : 'bg-cyan-950/30 border-cyan-500/40 shadow-sm'
                       : isLight
-                        ? 'bg-white border-slate-200 hover:border-slate-300'
+                        ? 'bg-[#edf5f7] border-slate-300 hover:border-slate-400'
                         : 'bg-[#08152c]/70 border-sky-500/10 hover:border-sky-500/25'
                   }`}
                 >
@@ -178,13 +178,13 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
                       <span className={`text-xs block truncate ${
                         task.completed 
                           ? 'line-through text-slate-400' 
-                          : isLight ? 'text-slate-900 font-semibold' : 'text-slate-200 font-medium'
+                          : isLight ? 'text-slate-900 font-bold' : 'text-slate-200 font-medium'
                       }`}>
                         {task.name}
                       </span>
                       {task.subject && (
                         <span className={`text-[10px] font-normal block ${
-                          isLight ? 'text-sky-700' : 'text-sky-400/70'
+                          isLight ? 'text-sky-800 font-semibold' : 'text-sky-400/70'
                         }`}>
                           {task.subject}
                         </span>
@@ -197,7 +197,7 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
                     {isActive ? (
                       <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
                         isLight
-                          ? 'bg-cyan-100 text-cyan-800 border-cyan-300'
+                          ? 'bg-cyan-100 text-cyan-900 border-cyan-400 font-bold'
                           : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
                       }`}>
                         Active
@@ -206,8 +206,8 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
                       <button
                         type="button"
                         onClick={() => onSelectActiveTask(task.name)}
-                        className={`text-[10px] hover:underline cursor-pointer ${
-                          isLight ? 'text-cyan-700' : 'text-slate-400 hover:text-cyan-300'
+                        className={`text-[10px] hover:underline cursor-pointer px-1 py-0.5 ${
+                          isLight ? 'text-cyan-800 font-semibold' : 'text-slate-400 hover:text-cyan-300'
                         }`}
                       >
                         Focus
@@ -238,7 +238,7 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
             onChange={(e) => setNewTaskInput(e.target.value)}
             className={`flex-1 px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-cyan-500 ${
               isLight
-                ? 'bg-white border border-slate-300 text-slate-900 placeholder-slate-400'
+                ? 'bg-[#edf5f7] border border-slate-300 text-slate-900 placeholder-slate-500'
                 : 'bg-[#061022] border border-sky-500/20 text-white placeholder-slate-500'
             }`}
           />
