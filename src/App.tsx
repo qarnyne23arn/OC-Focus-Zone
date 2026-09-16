@@ -113,6 +113,7 @@ import { SystemInitiateSplash } from './components/SystemInitiateSplash';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
 import { GoalsSection } from './components/GoalsSection';
+import { HabitHeatmap } from './components/HabitHeatmap';
 import { 
   loadStoredAuth, 
   saveStoredAuth, 
@@ -2140,6 +2141,9 @@ export default function App() {
                     isLight={isLight}
                   />
                 </div>
+
+                {/* Daily Study Streak & Habit Heatmap */}
+                <HabitHeatmap sessions={sessions} isLight={isLight} />
 
                 {/* Energy Journaling & Session Reflections */}
                 <div className="pt-2">
