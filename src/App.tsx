@@ -36,7 +36,9 @@ import {
   User as UserIcon,
   LogIn as LogInIcon,
   LogOut as LogOutIcon,
-  RefreshCw
+  RefreshCw,
+  Menu,
+  ChevronRight
 } from 'lucide-react';
 import { 
   TimerMode, 
@@ -189,6 +191,7 @@ export default function App() {
   const [lastAccountSyncedAt, setLastAccountSyncedAt] = useState<string | null>(null);
   const [isAccountSyncing, setIsAccountSyncing] = useState<boolean>(false);
   const [savedSnapshot, setSavedSnapshot] = useState<SessionSnapshot | null>(loadSessionSnapshot);
+  const [isCommandDeckOpen, setIsCommandDeckOpen] = useState<boolean>(false);
 
   // Cloud Sync & Offline State
   const [syncState, setSyncState] = useState<CloudSyncState>({
@@ -1153,8 +1156,26 @@ export default function App() {
           ? 'bg-white/95 border border-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.06)] text-slate-900'
           : 'bg-[#061022]/85 border border-sky-500/20 shadow-[0_15px_40px_rgba(0,0,0,0.7)] text-slate-100'
       }`}>
-        {/* Brand: OC with User's Golden Sand Clock Logo */}
-        <div className="flex items-center gap-3">
+        {/* Brand Container with Hamburger Menu (Phone) */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Hamburger Menu Button (Phone version) */}
+          <button
+            type="button"
+            onClick={() => setIsCommandDeckOpen(!isCommandDeckOpen)}
+            className={`sm:hidden p-2.5 rounded-2xl border flex items-center justify-center transition cursor-pointer ${
+              isLight
+                ? 'bg-slate-100 border-slate-300 text-slate-800 hover:bg-slate-200'
+                : 'bg-[#061022] border-sky-500/25 text-cyan-400 hover:text-white hover:border-cyan-400'
+            }`}
+            title="Open Command Deck"
+          >
+            {isCommandDeckOpen ? (
+              <X className="w-5 h-5 transition-transform duration-200" />
+            ) : (
+              <Menu className="w-5 h-5 transition-transform duration-200" />
+            )}
+          </button>
+
           <button
             type="button"
             onClick={() => setIsInitiating(true)}
@@ -1241,8 +1262,8 @@ export default function App() {
           </div>
         )}
 
-        {/* Right Status Badges & Quick Action Controls */}
-        <div className="flex items-center gap-2 sm:gap-2.5 flex-wrap">
+        {/* Right Status Badges & Quick Action Controls (Hidden on phone, shown on sm+; actions moved to Command Deck on phone) */}
+        <div className="hidden sm:flex items-center gap-2 sm:gap-2.5 flex-wrap">
           {/* Zen Sanctuary Fullscreen Trigger */}
           <button
             type="button"
@@ -2619,6 +2640,336 @@ export default function App() {
             <X className="w-3.5 h-3.5" />
           </button>
         </aside>
+      )}
+
+      {/* Command Deck Sidebar (Phone Version Slide-out) */}
+      {isCommandDeckOpen && (
+        <div className="fixed inset-0 z-50 flex sm:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsCommandDeckOpen(false)}
+          />
+          
+          {/* Sidebar Panel */}
+          <div className={`relative w-[85vw] max-w-sm h-full flex flex-col shadow-2xl z-10 animate-in slide-in-from-left duration-200 ${
+            isLight ? 'bg-white text-slate-900 border-r border-slate-200' : 'bg-[#061022] text-slate-100 border-r border-sky-500/20'
+          }`}>
+            {/* Deck Header */}
+            <div className={`p-4 border-b flex items-center justify-between ${
+              isLight ? 'border-slate-200 bg-slate-50' : 'border-sky-500/15 bg-[#08152c]'
+            }`}>
+              <div>
+                <h2 className="font-extrabold text-base tracking-tight">Command Deck</h2>
+                <p className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-sky-200/60'}`}>
+                  OC Sanctuary Quick Controls
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsCommandDeckOpen(false)}
+                className={`p-1.5 rounded-lg border ${
+                  isLight ? 'border-slate-300 text-slate-700' : 'border-slate-700 text-slate-300'
+                }`}
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Deck Body (Scrollable) */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-5">
+              
+              {/* Section 1: This session */}
+              <div className="space-y-2">
+                <div className={`text-[10px] font-bold uppercase tracking-wider px-1 ${
+                  isLight ? 'text-slate-400' : 'text-sky-400/70'
+                }`}>
+                  This session
+                </div>
+                
+                <div className="space-y-1.5">
+                  {/* Smart suggestions / Zen Sanctuary */}
+                  <div 
+                    onClick={() => { setIsCommandDeckOpen(false); setShowZenSanctuary(true); }}
+                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition ${
+                      isLight ? 'bg-slate-50 border-slate-200 hover:bg-cyan-50' : 'bg-[#091833] border-sky-500/15 hover:border-cyan-400/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Smart suggestions</div>
+                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Zen sanctuary mode</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </div>
+
+                  {/* Focus shield */}
+                  <div 
+                    onClick={() => {
+                      const next = !strictAntiCheatMode;
+                      setStrictAntiCheatMode(next);
+                      addAlert(next ? 'Anti-Cheat Locked' : 'Anti-Cheat Disabled', next ? 'Tab strays will be recorded.' : 'Paused.', 'anti_cheat');
+                    }}
+                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition ${
+                      isLight ? 'bg-slate-50 border-slate-200 hover:bg-cyan-50' : 'bg-[#091833] border-sky-500/15 hover:border-cyan-400/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-xl border flex items-center justify-center ${
+                        strictAntiCheatMode ? 'bg-rose-500/20 border-rose-500/40 text-rose-400' : 'bg-slate-800/50 border-slate-700 text-slate-400'
+                      }`}>
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Focus shield</div>
+                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Blocks alerts while running</div>
+                      </div>
+                    </div>
+                    <div className={`w-9 h-5 rounded-full transition p-0.5 ${strictAntiCheatMode ? 'bg-cyan-500' : 'bg-slate-700'}`}>
+                      <div className={`w-4 h-4 rounded-full bg-white transition-transform ${strictAntiCheatMode ? 'translate-x-4' : 'translate-x-0'}`} />
+                    </div>
+                  </div>
+
+                  {/* Ambient sound */}
+                  <div 
+                    onClick={() => {
+                      setIsCommandDeckOpen(false);
+                      setShowZenSanctuary(true);
+                    }}
+                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition ${
+                      isLight ? 'bg-slate-50 border-slate-200 hover:bg-cyan-50' : 'bg-[#091833] border-sky-500/15 hover:border-cyan-400/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                        <Cloud className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Ambient sound</div>
+                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          Binaural beats & rain soundscapes
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </div>
+
+                  {/* Distraction blocker */}
+                  <div 
+                    onClick={() => { setIsCommandDeckOpen(false); setShowBlockerModal(true); }}
+                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition ${
+                      isLight ? 'bg-slate-50 border-slate-200 hover:bg-cyan-50' : 'bg-[#091833] border-sky-500/15 hover:border-cyan-400/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                        <Shield className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Distraction blocker</div>
+                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Shield: {isRunning ? 'Active' : 'Standby'}</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </div>
+
+                  {/* Daily target */}
+                  <div 
+                    onClick={() => {
+                      setIsCommandDeckOpen(false);
+                      if (isClockExpanded) {
+                        setShowGoalsModal(true);
+                      } else {
+                        setDesktopTab('goals');
+                        const tabsNav = document.getElementById('study-suite-container');
+                        if (tabsNav) tabsNav.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition ${
+                      isLight ? 'bg-slate-50 border-slate-200 hover:bg-cyan-50' : 'bg-[#091833] border-sky-500/15 hover:border-cyan-400/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                        <Target className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Daily target</div>
+                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          {goals.filter((g) => g.completed).length} of {Math.max(1, goals.length)} completed
+                        </div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-mono font-bold">
+                      {goals.filter((g) => !g.completed).length} active
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 2: Looking back */}
+              <div className="space-y-2">
+                <div className={`text-[10px] font-bold uppercase tracking-wider px-1 ${
+                  isLight ? 'text-slate-400' : 'text-sky-400/70'
+                }`}>
+                  Looking back
+                </div>
+                
+                <div className="space-y-1.5">
+                  {/* Statistics */}
+                  <div 
+                    onClick={() => { setIsCommandDeckOpen(false); setShowStatsModal(true); }}
+                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition ${
+                      isLight ? 'bg-slate-50 border-slate-200 hover:bg-cyan-50' : 'bg-[#091833] border-sky-500/15 hover:border-cyan-400/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                        <BarChart2 className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Statistics</div>
+                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Productivity metrics & trends</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </div>
+
+                  {/* Session history */}
+                  <div 
+                    onClick={() => { setIsCommandDeckOpen(false); setShowExtendRestoreModal(true); }}
+                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition ${
+                      isLight ? 'bg-slate-50 border-slate-200 hover:bg-cyan-50' : 'bg-[#091833] border-sky-500/15 hover:border-cyan-400/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                        <History className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Session history</div>
+                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          {savedSnapshot ? 'Last session saved' : 'No recent session'}
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Sanctuary */}
+              <div className="space-y-2">
+                <div className={`text-[10px] font-bold uppercase tracking-wider px-1 ${
+                  isLight ? 'text-slate-400' : 'text-sky-400/70'
+                }`}>
+                  Sanctuary
+                </div>
+                
+                <div className="space-y-1.5">
+                  {/* Reset the day */}
+                  <div 
+                    onClick={() => { setIsCommandDeckOpen(false); setShowSystemResetModal(true); }}
+                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition ${
+                      isLight ? 'bg-slate-50 border-slate-200 hover:bg-rose-50' : 'bg-[#091833] border-rose-500/20 hover:border-rose-500/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                        <RotateCcw className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-rose-400">Reset the day</div>
+                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Restore factory defaults</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-rose-400/70" />
+                  </div>
+
+                  {/* Appearance */}
+                  <div 
+                    onClick={toggleThemeMode}
+                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition ${
+                      isLight ? 'bg-slate-50 border-slate-200 hover:bg-cyan-50' : 'bg-[#091833] border-sky-500/15 hover:border-cyan-400/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                        {isLight ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Appearance</div>
+                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          {isLight ? 'Day Mode (Light)' : 'Night Mode (Dark)'}
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-md ${isLight ? 'bg-slate-200 text-slate-700' : 'bg-slate-800 text-cyan-300'}`}>
+                      {isLight ? 'Light' : 'Dark'}
+                    </span>
+                  </div>
+
+                  {/* Settings */}
+                  <div 
+                    onClick={() => { setIsCommandDeckOpen(false); setIsSettingsModalOpen(true); }}
+                    className={`flex items-center justify-between p-2.5 rounded-2xl border cursor-pointer transition ${
+                      isLight ? 'bg-slate-50 border-slate-200 hover:bg-cyan-50' : 'bg-[#091833] border-sky-500/15 hover:border-cyan-400/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                        <SettingsIcon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold">Settings</div>
+                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Password, auto-sync & preferences</div>
+                      </div>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-slate-400" />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* Deck Footer (Log In / Sign Up full width) */}
+            <div className={`p-4 border-t ${
+              isLight ? 'border-slate-200 bg-slate-50' : 'border-sky-500/15 bg-[#08152c]'
+            }`}>
+              {authData.user ? (
+                <button
+                  type="button"
+                  onClick={() => { setIsCommandDeckOpen(false); setIsSettingsModalOpen(true); }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+                >
+                  <div className="w-5 h-5 rounded-lg bg-slate-950 text-cyan-300 font-black text-[10px] flex items-center justify-center uppercase">
+                    {authData.user.name ? authData.user.name[0] : 'U'}
+                  </div>
+                  <span className="truncate">{authData.user.name}</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCommandDeckOpen(false);
+                    setAuthModalInitialMode('login');
+                    setIsAuthModalOpen(true);
+                  }}
+                  className="w-full py-2.5 px-3 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-md transition cursor-pointer"
+                >
+                  Log In / Sign Up
+                </button>
+              )}
+              <div className={`text-[10px] text-center mt-2 ${isLight ? 'text-slate-500' : 'text-sky-200/60'}`}>
+                Syncs progress securely across devices
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -42,10 +42,12 @@ export const GoalProgressBar: React.FC<GoalProgressBarProps> = ({
           <Target className={`w-3.5 h-3.5 ${isLight ? 'text-cyan-600' : 'text-cyan-400'}`} />
           <span>Daily Study Goal</span>
           {activeGoalsCount !== undefined && activeGoalsCount > 0 && (
-            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
+            <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-semibold flex items-center gap-1 shrink-0 ${
               isLight ? 'bg-cyan-100 text-cyan-800' : 'bg-cyan-500/20 text-cyan-300'
             }`}>
-              {activeGoalsCount} target{activeGoalsCount > 1 ? 's' : ''}
+              <Target className="w-3 h-3 text-cyan-400" />
+              <span>{activeGoalsCount}</span>
+              <span className="hidden sm:inline">target{activeGoalsCount > 1 ? 's' : ''}</span>
             </span>
           )}
         </button>
