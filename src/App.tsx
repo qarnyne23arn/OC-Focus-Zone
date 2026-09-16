@@ -922,6 +922,7 @@ export default function App() {
           pomodorosLogged: 0,
           pomodorosTarget: 4,
           subject: 'Academic Study',
+          priority: 'medium',
         };
         setTasks((prev) => [newTask, ...prev]);
       }
@@ -930,7 +931,7 @@ export default function App() {
   };
 
   // Task List Handlers
-  const handleAddTask = (name: string, targetPomodoros = 4) => {
+  const handleAddTask = (name: string, targetPomodoros = 4, priority: 'low' | 'medium' | 'high' = 'medium') => {
     const newTask: TaskItem = {
       id: 'task-' + Date.now(),
       name,
@@ -938,6 +939,7 @@ export default function App() {
       pomodorosLogged: 0,
       pomodorosTarget: targetPomodoros,
       subject: 'General Study',
+      priority,
     };
     setTasks((prev) => [newTask, ...prev]);
     setActiveTaskName(name);
@@ -1209,58 +1211,40 @@ export default function App() {
           </div>
         </div>
 
-        {/* Center Task Pill (Enter Task - Editable) */}
-        {isEditingTaskInline ? (
-          <div className={`hidden md:flex items-center gap-1.5 px-3 py-1 rounded-2xl border ${
-            isLight
-              ? 'bg-white border-cyan-500 shadow-sm'
-              : 'bg-[#061022] border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.3)]'
-          }`}>
-            <BookOpen className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
-            <span className={`text-xs font-semibold shrink-0 ${isLight ? 'text-cyan-800' : 'text-cyan-300'}`}>Enter Task:</span>
-            <input
-              type="text"
-              value={tempTaskName}
-              onChange={(e) => setTempTaskName(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSaveInlineTask();
-                if (e.key === 'Escape') setIsEditingTaskInline(false);
-              }}
-              placeholder="Enter task name..."
-              className={`bg-transparent text-xs font-semibold focus:outline-none w-44 ${isLight ? 'text-slate-900 placeholder-slate-400' : 'text-white placeholder-slate-500'}`}
-              autoFocus
-            />
-            <button
-              type="button"
-              onClick={handleSaveInlineTask}
-              className="p-1 rounded bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-[10px] font-bold cursor-pointer"
-              title="Save task"
-            >
-              <Check className="w-3 h-3 stroke-[2.5]" />
-            </button>
-          </div>
-        ) : (
-          <div 
-            onClick={() => {
-              setTempTaskName(activeTaskName);
-              setIsEditingTaskInline(true);
-            }}
-            className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-2xl border text-xs cursor-pointer transition shadow-sm group ${
+        {/* User Account / Multi-Device Sign In Button (Replacing Enter Task section on desktop) */}
+        {authData.user ? (
+          <button
+            type="button"
+            onClick={() => setIsSettingsModalOpen(true)}
+            className={`hidden md:flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
               isLight
-                ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-800'
-                : 'bg-[#061022] hover:bg-[#0b1c3a] border-sky-500/20 hover:border-cyan-400/50 text-slate-300'
+                ? 'bg-cyan-50 border-cyan-300 text-slate-900 shadow-sm hover:bg-cyan-100'
+                : 'bg-[#061022] border-cyan-500/40 text-white hover:border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
             }`}
-            title="Click to enter or change study task"
+            title={`Signed in as ${authData.user.email}. Auto-syncing across devices. Click for settings & change password.`}
           >
-            <BookOpen className={`w-3.5 h-3.5 shrink-0 group-hover:scale-110 transition-transform ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
-            <span className={isLight ? 'text-slate-600' : 'text-slate-400'}>Enter Task:</span>
-            <span className={`font-bold truncate max-w-[200px] transition ${
-              isLight ? 'text-slate-900 group-hover:text-cyan-800' : 'text-white group-hover:text-cyan-200'
-            }`}>
-              {activeTaskName || 'Enter task...'}
-            </span>
-            <Edit2 className={`w-3 h-3 opacity-60 group-hover:opacity-100 transition ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
-          </div>
+            <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-cyan-600 to-sky-400 text-slate-950 font-black text-[11px] flex items-center justify-center uppercase shadow-sm">
+              {authData.user.name ? authData.user.name[0] : 'U'}
+            </div>
+            <span className="truncate max-w-[120px]">{authData.user.name}</span>
+            <span 
+              className={`w-2 h-2 rounded-full ${isAccountSyncing ? 'bg-cyan-400 animate-spin' : 'bg-emerald-400 animate-pulse'}`} 
+              title={isAccountSyncing ? 'Synchronizing with cloud...' : 'Auto-synced across devices'} 
+            />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => {
+              setAuthModalInitialMode('login');
+              setIsAuthModalOpen(true);
+            }}
+            className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:brightness-105 active:scale-95 transition cursor-pointer"
+            title="Sign in or create account for multi-device auto sync"
+          >
+            <LogInIcon className="w-3.5 h-3.5" />
+            <span>Log In / Sign Up</span>
+          </button>
         )}
 
         {/* Right Status Badges & Quick Action Controls (Hidden on phone, shown on sm+; actions moved to Command Deck on phone) */}
@@ -1471,41 +1455,7 @@ export default function App() {
             <SettingsIcon className={`w-4 h-4 ${isLight ? 'text-slate-800' : 'text-cyan-400'}`} />
           </button>
 
-          {/* User Account / Multi-Device Sign In Button */}
-          {authData.user ? (
-            <button
-              type="button"
-              onClick={() => setIsSettingsModalOpen(true)}
-              className={`flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
-                isLight
-                  ? 'bg-cyan-50 border-cyan-300 text-slate-900 shadow-sm hover:bg-cyan-100'
-                  : 'bg-[#061022] border-cyan-500/40 text-white hover:border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
-              }`}
-              title={`Signed in as ${authData.user.email}. Auto-syncing across devices. Click for settings & change password.`}
-            >
-              <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-cyan-600 to-sky-400 text-slate-950 font-black text-[11px] flex items-center justify-center uppercase shadow-sm">
-                {authData.user.name ? authData.user.name[0] : 'U'}
-              </div>
-              <span className="hidden sm:inline truncate max-w-[90px]">{authData.user.name}</span>
-              <span 
-                className={`w-2 h-2 rounded-full ${isAccountSyncing ? 'bg-cyan-400 animate-spin' : 'bg-emerald-400 animate-pulse'}`} 
-                title={isAccountSyncing ? 'Synchronizing with cloud...' : 'Auto-synced across devices'} 
-              />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setAuthModalInitialMode('login');
-                setIsAuthModalOpen(true);
-              }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:brightness-105 active:scale-95 transition cursor-pointer"
-              title="Sign in or create account for multi-device auto sync"
-            >
-              <LogInIcon className="w-3.5 h-3.5" />
-              <span>Log In / Sign Up</span>
-            </button>
-          )}
+
         </div>
       </header>
 

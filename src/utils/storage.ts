@@ -252,16 +252,17 @@ export function saveLocalActiveTask(taskName: string): void {
 
 export function loadLocalTasks(): TaskItem[] {
   try {
-    // Clean out previous pre-seeded tasks if they contain old defaults
     const raw = localStorage.getItem(STORAGE_KEY_TASKS);
     if (!raw) return [];
     const parsed: TaskItem[] = JSON.parse(raw);
-    // If the saved tasks were just the old pre-entered items, reset to empty
     if (parsed.length > 0 && parsed.some(t => t.name === 'Algorithms & Data Structures' || t.name === 'Distributed Systems Architecture')) {
       saveLocalTasks([]);
       return [];
     }
-    return parsed;
+    return parsed.map(t => ({
+      ...t,
+      priority: t.priority || 'medium'
+    }));
   } catch {
     return [];
   }

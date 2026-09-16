@@ -80,6 +80,7 @@ export interface TaskItem {
   pomodorosLogged: number;
   pomodorosTarget: number;
   subject?: string;
+  priority: 'low' | 'medium' | 'high';
 }
 
 export interface ProductivityDataPoint {
