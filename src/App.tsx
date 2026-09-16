@@ -50,7 +50,8 @@ import {
   UserProfile,
   ThemeMode,
   FocusProtocol,
-  AppSettings
+  AppSettings,
+  GoalItem
 } from './types';
 import { 
   loadLocalSessions, 
@@ -79,7 +80,9 @@ import {
   loadLocalActiveTask,
   saveLocalActiveTask,
   loadLocalFloatingDockHidden,
-  saveLocalFloatingDockHidden
+  saveLocalFloatingDockHidden,
+  loadLocalGoals,
+  saveLocalGoals
 } from './utils/storage';
 import { 
   playStartChime, 
@@ -107,6 +110,7 @@ import { FocusProtocolsCard } from './components/FocusProtocolsCard';
 import { SystemInitiateSplash } from './components/SystemInitiateSplash';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
+import { GoalsSection } from './components/GoalsSection';
 import { 
   loadStoredAuth, 
   saveStoredAuth, 
@@ -148,9 +152,11 @@ export default function App() {
   const [showStatsModal, setShowStatsModal] = useState<boolean>(false);
   const [simulatedBlockedDomain, setSimulatedBlockedDomain] = useState<string | null>(null);
 
-  // Right column tab for PC webpage view (Consolidated 3 Views: workspace, insights, protocols_shield)
-  type DesktopTab = 'workspace' | 'insights' | 'protocols_shield';
+  // Right column tab for PC webpage view (Consolidated 4 Views: workspace, goals, insights, protocols_shield)
+  type DesktopTab = 'workspace' | 'goals' | 'insights' | 'protocols_shield';
   const [desktopTab, setDesktopTab] = useState<DesktopTab>('workspace');
+  const [goals, setGoals] = useState<GoalItem[]>(loadLocalGoals);
+  const [showGoalsModal, setShowGoalsModal] = useState<boolean>(false);
 
   // New Requested Feature States
   const [isClockExpanded, setIsClockExpanded] = useState<boolean>(false);
@@ -235,6 +241,79 @@ export default function App() {
   useEffect(() => {
     saveLocalActiveTask(activeTaskName);
   }, [activeTaskName]);
+
+  useEffect(() => {
+    saveLocalGoals(goals);
+  }, [goals]);
+
+  // Goal Deadline Reminders Checker (every 20 seconds)
+  useEffect(() => {
+    const checkGoalReminders = () => {
+      const now = new Date();
+      const nowMs = now.getTime();
+
+      setGoals((prevGoals) => {
+        let hasChanges = false;
+        const nextGoals = prevGoals.map((goal) => {
+          if (goal.completed || !goal.reminderEnabled || goal.reminderTriggered) {
+            return goal;
+          }
+
+          try {
+            const [y, m, d] = goal.deadlineDate.split('-').map(Number);
+            const [h, min] = goal.deadlineTime.split(':').map(Number);
+            const deadlineMs = new Date(y, m - 1, d, h || 0, min || 0).getTime();
+
+            let leadMs = 0;
+            switch (goal.reminderLeadTime) {
+              case '15m': leadMs = 15 * 60 * 1000; break;
+              case '30m': leadMs = 30 * 60 * 1000; break;
+              case '1h': leadMs = 60 * 60 * 1000; break;
+              case '2h': leadMs = 2 * 60 * 60 * 1000; break;
+              case '1d': leadMs = 24 * 60 * 60 * 1000; break;
+              case 'at_deadline': leadMs = 0; break;
+              default: leadMs = 0; break;
+            }
+
+            const alertTimeMs = deadlineMs - leadMs;
+
+            // Trigger if current time has reached or passed reminder time (within 3 hours)
+            if (nowMs >= alertTimeMs && nowMs <= deadlineMs + 3 * 60 * 60 * 1000) {
+              hasChanges = true;
+              playMilestoneChime();
+              addAlert(
+                `🔔 Goal Reminder: ${goal.title}`,
+                `Deadline is ${goal.deadlineDate} at ${goal.deadlineTime} (${goal.timeframe.replace('_', ' ')} goal). Stay focused!`,
+                'goal_completed'
+              );
+
+              if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                try {
+                  new Notification(`Goal Reminder: ${goal.title}`, {
+                    body: `Due at ${goal.deadlineTime}. Make progress today!`,
+                    icon: '/sandclock.svg',
+                  });
+                } catch {
+                  // ignore
+                }
+              }
+
+              return { ...goal, reminderTriggered: true };
+            }
+          } catch {
+            // ignore
+          }
+          return goal;
+        });
+
+        return hasChanges ? nextGoals : prevGoals;
+      });
+    };
+
+    checkGoalReminders();
+    const reminderInterval = setInterval(checkGoalReminders, 20000);
+    return () => clearInterval(reminderInterval);
+  }, [addAlert]);
 
   // Online / Offline listener
   useEffect(() => {
@@ -358,6 +437,7 @@ export default function App() {
         if (res.data.settings) setSettings(res.data.settings);
         if (res.data.blockedSites) setBlockedSites(res.data.blockedSites);
         if (res.data.tasks) setTasks(res.data.tasks);
+        if (res.data.goals) setGoals(res.data.goals);
         if (res.data.activeTaskName !== undefined) setActiveTaskName(res.data.activeTaskName);
         if (res.updatedAt) setLastAccountSyncedAt(res.updatedAt);
         if (!silent) {
@@ -389,6 +469,7 @@ export default function App() {
           settings,
           blockedSites,
           tasks,
+          goals,
           activeTaskName,
         });
         setLastAccountSyncedAt(res.updatedAt);
@@ -398,7 +479,7 @@ export default function App() {
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [sessions, settings, blockedSites, tasks, activeTaskName, authData.token]);
+  }, [sessions, settings, blockedSites, tasks, goals, activeTaskName, authData.token]);
 
   // Background Auto-Sync Poller (every 20 seconds and on window focus for cross-device live updates)
   useEffect(() => {
@@ -523,6 +604,7 @@ export default function App() {
             settings,
             blockedSites,
             tasks,
+            goals,
             activeTaskName,
           },
         }),
@@ -557,6 +639,7 @@ export default function App() {
           if (json.data.settings) setSettings(json.data.settings);
           if (json.data.blockedSites) setBlockedSites(json.data.blockedSites);
           if (json.data.tasks) setTasks(json.data.tasks);
+          if (json.data.goals) setGoals(json.data.goals);
           addAlert('Device Paired', `Pulled workspace data for ${newCode}!`, 'milestone');
         }
       } catch {
@@ -923,6 +1006,7 @@ export default function App() {
     setShowHideUndoToast(false);
     setReflections([]);
     setSavedSnapshot(null);
+    setGoals(loadLocalGoals());
     addAlert('System Reset Complete', 'All study data, tasks, and settings restored to factory defaults.', 'milestone');
   };
 
@@ -955,6 +1039,93 @@ export default function App() {
       `${proto.focusMinutes}m Focus + ${proto.breakMinutes}m Break. ${proto.description}`,
       'milestone'
     );
+  };
+
+  // Goals & Deadlines Handlers
+  const handleAddGoal = (newGoalData: Omit<GoalItem, 'id' | 'createdAt' | 'completed'>) => {
+    const newGoal: GoalItem = {
+      ...newGoalData,
+      id: 'g-' + Math.random().toString(36).substring(2, 9),
+      createdAt: new Date().toISOString(),
+      completed: false,
+    };
+    setGoals((prev) => [newGoal, ...prev]);
+    playToggleTick();
+    addAlert('🎯 Goal Created', `"${newGoal.title}" added with deadline at ${newGoal.deadlineTime}.`, 'milestone');
+  };
+
+  const handleUpdateGoal = (updatedGoal: GoalItem) => {
+    setGoals((prev) => prev.map((g) => (g.id === updatedGoal.id ? updatedGoal : g)));
+    playToggleTick();
+    addAlert('Goal Updated', `"${updatedGoal.title}" settings saved.`, 'milestone');
+  };
+
+  const handleToggleGoalComplete = (id: string) => {
+    setGoals((prev) =>
+      prev.map((g) => {
+        if (g.id === id) {
+          const nextCompleted = !g.completed;
+          if (nextCompleted) {
+            playCompletionFanfare();
+            addAlert('🏆 Goal Achieved!', `Great work! "${g.title}" marked as complete.`, 'goal_completed');
+          } else {
+            playToggleTick();
+            addAlert('Goal Reopened', `"${g.title}" marked active.`, 'milestone');
+          }
+          return {
+            ...g,
+            completed: nextCompleted,
+            completedAt: nextCompleted ? new Date().toISOString() : undefined,
+          };
+        }
+        return g;
+      })
+    );
+  };
+
+  const handleDeleteGoal = (id: string) => {
+    setGoals((prev) => prev.filter((g) => g.id !== id));
+    playToggleTick();
+    addAlert('Goal Removed', 'Goal deleted from tracker.', 'milestone');
+  };
+
+  const handleSelectGoalAsTask = (goalTitle: string, targetMinutes?: number) => {
+    setActiveTaskName(goalTitle);
+    saveLocalActiveTask(goalTitle);
+    if (targetMinutes && targetMinutes > 0) {
+      const secs = targetMinutes * 60;
+      setTotalSeconds(secs);
+      setRemainingSeconds(secs);
+    }
+    playToggleTick();
+    addAlert('Focus Target Set', `Now studying for goal: "${goalTitle}"`, 'milestone');
+    const timerCard = document.getElementById('focus-time-main-card');
+    if (timerCard) {
+      timerCard.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleTriggerTestReminder = (goal: GoalItem) => {
+    playMilestoneChime();
+    addAlert(
+      `🔔 Test Reminder: ${goal.title}`,
+      `Scheduled for ${goal.deadlineDate} at ${goal.deadlineTime} (${goal.reminderLeadTime.replace('_', ' ')} before deadline). Reminder alert is active!`,
+      'goal_completed'
+    );
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission();
+      } else if (Notification.permission === 'granted') {
+        try {
+          new Notification(`Goal Reminder: ${goal.title}`, {
+            body: `Deadline is ${goal.deadlineDate} at ${goal.deadlineTime}.`,
+            icon: '/sandclock.svg',
+          });
+        } catch {
+          // ignore
+        }
+      }
+    }
   };
 
   const isLight = settings.themeMode === 'light';
@@ -1172,6 +1343,40 @@ export default function App() {
             <span className="text-[11px] font-medium hidden lg:inline">
               Shield: {isRunning ? 'Active' : 'Standby'}
             </span>
+          </button>
+
+          {/* Goals & Deadlines Tracker Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (isClockExpanded) {
+                setShowGoalsModal(true);
+              } else {
+                setDesktopTab('goals');
+                const tabsNav = document.getElementById('study-suite-container');
+                if (tabsNav) tabsNav.scrollIntoView({ behavior: 'smooth' });
+              }
+            }}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs transition cursor-pointer ${
+              desktopTab === 'goals' && !isClockExpanded
+                ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-bold shadow-sm'
+                : isLight
+                  ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
+                  : 'bg-[#061022] border-sky-500/20 text-cyan-400 hover:text-white hover:border-cyan-400'
+            }`}
+            title="Daily, Monthly & Long-Term Goals with Deadlines & Reminders"
+          >
+            <Target className="w-3.5 h-3.5 text-cyan-500" />
+            <span className="text-[11px] font-medium hidden lg:inline">Goals</span>
+            {goals.filter((g) => !g.completed).length > 0 && (
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+                desktopTab === 'goals' && !isClockExpanded
+                  ? 'bg-slate-950 text-white'
+                  : isLight ? 'bg-cyan-100 text-cyan-800' : 'bg-cyan-500/20 text-cyan-300'
+              }`}>
+                {goals.filter((g) => !g.completed).length}
+              </span>
+            )}
           </button>
 
           {/* Productivity Stats */}
@@ -1650,6 +1855,16 @@ export default function App() {
                 totalSeconds={totalSeconds}
                 isFocusMode={mode === 'focus'}
                 isLight={isLight}
+                onOpenGoals={() => {
+                  if (isClockExpanded) {
+                    setShowGoalsModal(true);
+                  } else {
+                    setDesktopTab('goals');
+                    const tabsNav = document.getElementById('study-suite-container');
+                    if (tabsNav) tabsNav.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                activeGoalsCount={goals.filter((g) => !g.completed).length}
               />
             </div>
           </main>
@@ -1657,14 +1872,14 @@ export default function App() {
 
         {/* RIGHT COLUMN: PC Webpage Expansive Study Suite (Columns 6-12 on Desktop) */}
         {!isClockExpanded && (
-          <div className="lg:col-span-7 flex flex-col gap-6 w-full animate-in fade-in duration-200">
+          <div id="study-suite-container" className="lg:col-span-7 flex flex-col gap-6 w-full animate-in fade-in duration-200">
           
-          {/* CONSOLIDATED 3 CLEAN TABS SELECTOR */}
-          <nav aria-label="Study Suite Views" className={`p-1.5 rounded-2xl backdrop-blur-xl grid grid-cols-3 gap-1.5 sm:gap-2 shadow-lg ${isLight ? 'bg-white/90 border border-slate-200 shadow-slate-200/50' : 'bg-[#081326]/90 border border-sky-500/20'}`}>
+          {/* CONSOLIDATED 4 CLEAN TABS SELECTOR */}
+          <nav aria-label="Study Suite Views" className={`p-1.5 rounded-2xl backdrop-blur-xl grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 shadow-lg ${isLight ? 'bg-white/90 border border-slate-200 shadow-slate-200/50' : 'bg-[#081326]/90 border border-sky-500/20'}`}>
             <button
               type="button"
               onClick={() => setDesktopTab('workspace')}
-              className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+              className={`py-2.5 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer ${
                 desktopTab === 'workspace'
                   ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30 font-black'
                   : isLight
@@ -1672,8 +1887,8 @@ export default function App() {
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <BookOpen className="w-4 h-4" />
-              <span className="hidden sm:inline">Workspace &</span> Tasks
+              <BookOpen className="w-4 h-4 shrink-0" />
+              <span className="truncate">Tasks</span>
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${desktopTab === 'workspace' ? 'bg-slate-950/20 text-slate-900 font-bold' : isLight ? 'bg-slate-100 text-slate-700 font-medium' : 'bg-slate-800 text-slate-400'}`}>
                 {tasks.length}
               </span>
@@ -1681,8 +1896,26 @@ export default function App() {
 
             <button
               type="button"
+              onClick={() => setDesktopTab('goals')}
+              className={`py-2.5 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer ${
+                desktopTab === 'goals'
+                  ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30 font-black'
+                  : isLight
+                    ? 'text-slate-700 hover:text-slate-950 hover:bg-slate-100'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+              }`}
+            >
+              <Target className="w-4 h-4 shrink-0 text-cyan-400" />
+              <span className="truncate">Goals</span>
+              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${desktopTab === 'goals' ? 'bg-slate-950/20 text-slate-900 font-bold' : isLight ? 'bg-cyan-100 text-cyan-800 font-bold' : 'bg-cyan-950/80 text-cyan-300 font-bold'}`}>
+                {goals.filter((g) => !g.completed).length}
+              </span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setDesktopTab('insights')}
-              className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+              className={`py-2.5 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer ${
                 desktopTab === 'insights'
                   ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30 font-black'
                   : isLight
@@ -1690,8 +1923,8 @@ export default function App() {
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <BarChart2 className="w-4 h-4" />
-              <span className="hidden sm:inline">Insights &</span> Reflections
+              <BarChart2 className="w-4 h-4 shrink-0" />
+              <span className="truncate">Insights</span>
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${desktopTab === 'insights' ? 'bg-slate-950/20 text-slate-900 font-bold' : isLight ? 'bg-slate-100 text-slate-700 font-medium' : 'bg-slate-800 text-slate-400'}`}>
                 {reflections.length}
               </span>
@@ -1700,7 +1933,7 @@ export default function App() {
             <button
               type="button"
               onClick={() => setDesktopTab('protocols_shield')}
-              className={`py-2.5 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer ${
+              className={`py-2.5 px-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 sm:gap-2 transition cursor-pointer ${
                 desktopTab === 'protocols_shield'
                   ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30 font-black'
                   : isLight
@@ -1708,8 +1941,8 @@ export default function App() {
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
               }`}
             >
-              <Target className="w-4 h-4" />
-              <span className="hidden sm:inline">Protocols &</span> Shield
+              <ShieldCheck className="w-4 h-4 shrink-0" />
+              <span className="truncate">Protocols</span>
             </button>
           </nav>
 
@@ -1806,7 +2039,21 @@ export default function App() {
               </div>
             )}
 
-            {/* VIEW 2: Insights & Reflections (Hourly Chart + Metrics + Energy Journal) */}
+            {/* VIEW 2: Goals & Milestones (Daily, Monthly, Long-Term with Deadlines & Reminders) */}
+            {desktopTab === 'goals' && (
+              <GoalsSection
+                goals={goals}
+                onAddGoal={handleAddGoal}
+                onUpdateGoal={handleUpdateGoal}
+                onToggleGoalComplete={handleToggleGoalComplete}
+                onDeleteGoal={handleDeleteGoal}
+                onSelectGoalAsTask={handleSelectGoalAsTask}
+                onTriggerTestReminder={handleTriggerTestReminder}
+                isLight={isLight}
+              />
+            )}
+
+            {/* VIEW 3: Insights & Reflections (Hourly Chart + Metrics + Energy Journal) */}
             {desktopTab === 'insights' && (
               <div className="space-y-5">
                 {/* Summary Metric Badges */}
@@ -2279,6 +2526,52 @@ export default function App() {
         isSyncing={isAccountSyncing}
         onTriggerSync={handleTriggerAccountSync}
       />
+
+      {/* Goals & Milestones Modal (Quick popup access when clock is expanded) */}
+      {showGoalsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-md animate-in fade-in">
+          <div className={`relative w-full max-w-4xl max-h-[90vh] overflow-y-auto p-4 sm:p-6 rounded-3xl border shadow-2xl ${
+            isLight
+              ? 'bg-white border-slate-200 text-slate-800'
+              : 'bg-[#08152c] border-sky-500/25 text-slate-200'
+          }`}>
+            <div className={`flex items-center justify-between pb-3 mb-4 border-b ${
+              isLight ? 'border-slate-200' : 'border-sky-500/15'
+            }`}>
+              <div className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-cyan-400" />
+                <h2 className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  Goals & Deadlines Sanctuary
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGoalsModal(false)}
+                className={`text-xs px-2.5 py-1 rounded-lg border font-semibold cursor-pointer ${
+                  isLight
+                    ? 'border-slate-300 text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    : 'border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800'
+                }`}
+              >
+                ✕ Close
+              </button>
+            </div>
+            <GoalsSection
+              goals={goals}
+              onAddGoal={handleAddGoal}
+              onUpdateGoal={handleUpdateGoal}
+              onToggleGoalComplete={handleToggleGoalComplete}
+              onDeleteGoal={handleDeleteGoal}
+              onSelectGoalAsTask={(name, mins) => {
+                handleSelectGoalAsTask(name, mins);
+                setShowGoalsModal(false);
+              }}
+              onTriggerTestReminder={handleTriggerTestReminder}
+              isLight={isLight}
+            />
+          </div>
+        </div>
+      )}
 
       {/* 0. System Initiate Splash Screen (Shows user golden hourglass logo for ~1 second, then enters app) */}
       {isInitiating && (

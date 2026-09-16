@@ -20,6 +20,28 @@ export interface BlockedWebsite {
   enabled: boolean;
 }
 
+export type GoalTimeframe = 'daily' | 'monthly' | 'long_term';
+
+export type ReminderLeadTime = 'at_deadline' | '15m' | '30m' | '1h' | '2h' | '1d' | 'custom';
+
+export interface GoalItem {
+  id: string;
+  title: string;
+  description?: string;
+  timeframe: GoalTimeframe;
+  category: 'study' | 'exam' | 'project' | 'habit' | 'personal';
+  deadlineDate: string; // YYYY-MM-DD
+  deadlineTime: string; // HH:mm
+  completed: boolean;
+  completedAt?: string; // ISO string
+  createdAt: string;   // ISO string
+  targetMinutes?: number;
+  reminderEnabled: boolean;
+  reminderLeadTime: ReminderLeadTime;
+  customReminderDateTime?: string; // YYYY-MM-DDTHH:mm
+  reminderTriggered?: boolean;
+}
+
 export interface DailyGoal {
   targetMinutes: number;
   date: string;

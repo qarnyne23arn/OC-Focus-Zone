@@ -8,6 +8,8 @@ interface GoalProgressBarProps {
   totalSeconds: number;
   isFocusMode: boolean;
   isLight?: boolean;
+  onOpenGoals?: () => void;
+  activeGoalsCount?: number;
 }
 
 export const GoalProgressBar: React.FC<GoalProgressBarProps> = ({
@@ -17,6 +19,8 @@ export const GoalProgressBar: React.FC<GoalProgressBarProps> = ({
   totalSeconds,
   isFocusMode,
   isLight = false,
+  onOpenGoals,
+  activeGoalsCount,
 }) => {
   const goalPercentage = Math.min(100, Math.round((currentMinutes / Math.max(1, goalMinutes)) * 100));
   const sessionElapsed = totalSeconds > 0 ? ((totalSeconds - remainingSeconds) / totalSeconds) * 100 : 0;
@@ -27,10 +31,24 @@ export const GoalProgressBar: React.FC<GoalProgressBarProps> = ({
     }`}>
       {/* Daily Goal Header */}
       <div className="flex items-center justify-between text-xs mb-1.5">
-        <span className={`flex items-center gap-1.5 font-bold ${isLight ? 'text-slate-900' : 'text-sky-200'}`}>
+        <button
+          type="button"
+          onClick={onOpenGoals}
+          className={`flex items-center gap-1.5 font-bold transition cursor-pointer text-left ${
+            onOpenGoals ? 'hover:underline' : ''
+          } ${isLight ? 'text-slate-900 hover:text-cyan-700' : 'text-sky-200 hover:text-white'}`}
+          title="Click to view Goals & Milestones Tracker"
+        >
           <Target className={`w-3.5 h-3.5 ${isLight ? 'text-cyan-600' : 'text-cyan-400'}`} />
-          Daily Study Goal
-        </span>
+          <span>Daily Study Goal</span>
+          {activeGoalsCount !== undefined && activeGoalsCount > 0 && (
+            <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-semibold ${
+              isLight ? 'bg-cyan-100 text-cyan-800' : 'bg-cyan-500/20 text-cyan-300'
+            }`}>
+              {activeGoalsCount} target{activeGoalsCount > 1 ? 's' : ''}
+            </span>
+          )}
+        </button>
         <span className={`font-bold ${isLight ? 'text-cyan-800' : 'text-cyan-300'}`}>
           {currentMinutes} / {goalMinutes} min <span className={`font-normal ${isLight ? 'text-slate-500' : 'text-sky-300/60'}`}>({goalPercentage}%)</span>
         </span>

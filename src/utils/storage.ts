@@ -1,4 +1,4 @@
-import { AppSettings, BlockedWebsite, StudySession, TaskItem, FocusProtocol } from '../types';
+import { AppSettings, BlockedWebsite, StudySession, TaskItem, FocusProtocol, GoalItem } from '../types';
 
 export const FOCUS_PROTOCOLS: FocusProtocol[] = [
   {
@@ -105,6 +105,7 @@ export function performSystemReset(): void {
     localStorage.removeItem(STORAGE_KEY_SNAPSHOT);
     localStorage.removeItem(STORAGE_KEY_OFFLINE_QUEUE);
     localStorage.removeItem(STORAGE_KEY_REFLECTIONS);
+    localStorage.removeItem(STORAGE_KEY_GOALS);
   } catch {
     // Ignore
   }
@@ -117,6 +118,88 @@ export function getTodayDateString(): string {
   const month = String(d.getMonth() + 1).padStart(2, '0');
   const day = String(d.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+export function getDefaultGoals(): GoalItem[] {
+  const today = getTodayDateString();
+  const now = new Date();
+  
+  // End of current month
+  const endOfMonthDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const endOfMonth = `${endOfMonthDate.getFullYear()}-${String(endOfMonthDate.getMonth() + 1).padStart(2, '0')}-${String(endOfMonthDate.getDate()).padStart(2, '0')}`;
+  
+  // 90 days from now for long-term
+  const longTermDate = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
+  const longTermStr = `${longTermDate.getFullYear()}-${String(longTermDate.getMonth() + 1).padStart(2, '0')}-${String(longTermDate.getDate()).padStart(2, '0')}`;
+
+  return [
+    {
+      id: 'g-daily-1',
+      title: 'Complete 2 Deep Work Focus Sessions',
+      description: 'Master today\'s core problem sets with zero distractions.',
+      timeframe: 'daily',
+      category: 'study',
+      deadlineDate: today,
+      deadlineTime: '21:00',
+      completed: false,
+      createdAt: new Date().toISOString(),
+      targetMinutes: 90,
+      reminderEnabled: true,
+      reminderLeadTime: '1h',
+    },
+    {
+      id: 'g-monthly-1',
+      title: 'Complete Chapter 4 & 5 Mock Exam Review',
+      description: 'Review all formula derivations and practice question banks.',
+      timeframe: 'monthly',
+      category: 'exam',
+      deadlineDate: endOfMonth,
+      deadlineTime: '22:00',
+      completed: false,
+      createdAt: new Date().toISOString(),
+      targetMinutes: 300,
+      reminderEnabled: true,
+      reminderLeadTime: '1d',
+    },
+    {
+      id: 'g-long-1',
+      title: 'Pass Semester Final Exams in Top 5%',
+      description: 'Consistent daily adherence to Ultradian / Pomodoro study protocols.',
+      timeframe: 'long_term',
+      category: 'project',
+      deadlineDate: longTermStr,
+      deadlineTime: '18:00',
+      completed: false,
+      createdAt: new Date().toISOString(),
+      targetMinutes: 1200,
+      reminderEnabled: true,
+      reminderLeadTime: '1d',
+    },
+  ];
+}
+
+const STORAGE_KEY_GOALS = 'focus_time_goals_v1';
+
+export function loadLocalGoals(): GoalItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_GOALS);
+    if (!raw) {
+      const defaults = getDefaultGoals();
+      saveLocalGoals(defaults);
+      return defaults;
+    }
+    return JSON.parse(raw);
+  } catch {
+    return getDefaultGoals();
+  }
+}
+
+export function saveLocalGoals(goals: GoalItem[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_GOALS, JSON.stringify(goals));
+  } catch {
+    // Ignore
+  }
 }
 
 // Initial sessions start at 0 (empty) as requested
