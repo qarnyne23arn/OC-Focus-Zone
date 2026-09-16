@@ -13,9 +13,13 @@ import {
   LogOut,
   Sliders,
   ShieldAlert,
+  Download,
+  FileSpreadsheet,
+  FileCode,
 } from 'lucide-react';
 import { AppSettings, ThemeMode, UserProfile } from '../types';
 import { apiChangePassword } from '../utils/auth';
+import { loadLocalSessions, loadLocalTasks } from '../utils/storage';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -44,7 +48,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   lastSyncedAt,
   isSyncing,
 }) => {
-  const [activeTab, setActiveTab] = useState<'account' | 'appearance' | 'sync' | 'timer'>('account');
+  const [activeTab, setActiveTab] = useState<'account' | 'appearance' | 'sync' | 'timer' | 'export'>('account');
 
   // Change Password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -100,6 +104,48 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       ...settings,
       themeMode: mode,
     });
+  };
+
+  const handleExportJSON = () => {
+    const data = {
+      sessions: loadLocalSessions(),
+      tasks: loadLocalTasks(),
+      settings,
+      exportDate: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oc-focus-sanctuary-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportCSV = () => {
+    const sessions = loadLocalSessions();
+    if (sessions.length === 0) {
+      alert('No study sessions found to export.');
+      return;
+    }
+    const headers = ['ID', 'Date', 'Subject', 'Mode', 'PlannedMinutes', 'ActualMinutes', 'Completed'];
+    const rows = sessions.map(s => [
+      s.id,
+      s.date,
+      `"${s.subject || 'General'}"`,
+      s.mode,
+      s.durationMinutes,
+      s.actualMinutes,
+      s.completed ? 'Yes' : 'No',
+    ]);
+    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `oc-focus-study-sessions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const currentTheme = settings.themeMode || 'dark';
@@ -160,7 +206,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Settings Navigation Tabs */}
-        <div className={`grid grid-cols-4 p-1 rounded-2xl border mb-6 ${
+        <div className={`grid grid-cols-5 p-1 rounded-2xl border mb-6 ${
           isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/90 border-slate-800'
         }`}>
           <button
@@ -213,6 +259,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           >
             <Sliders className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Timer</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('export')}
+            className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === 'export'
+                ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
+                : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Download className="w-3.5 h-3.5" />
+            <span>Export</span>
           </button>
         </div>
 
@@ -654,6 +713,75 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     }
                     className="w-4 h-4 accent-cyan-500 rounded cursor-pointer"
                   />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5: DATA EXPORT (CSV / JSON) */}
+          {activeTab === 'export' && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              <div className={`p-4 rounded-2xl border space-y-2 ${
+                isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/50 border-slate-800'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <Download className="w-4 h-4 text-cyan-600 dark:text-cyan-500" />
+                  <h3 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    Export Study Data & Backups
+                  </h3>
+                </div>
+                <p className={`text-xs ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
+                  Download your complete study session logs as a spreadsheet (CSV) or backup all your application state as a JSON file.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className={`p-5 rounded-2xl border flex flex-col justify-between gap-4 ${
+                  isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/70 border-slate-800'
+                }`}>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <FileSpreadsheet className="w-5 h-5 text-emerald-500" />
+                      <h4 className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        Study Sessions (CSV)
+                      </h4>
+                    </div>
+                    <p className={`text-xs ${isLight ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
+                      Export session logs, dates, subjects, durations, and task completion in spreadsheet format for Excel or Google Sheets.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleExportCSV}
+                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download CSV Report
+                  </button>
+                </div>
+
+                <div className={`p-5 rounded-2xl border flex flex-col justify-between gap-4 ${
+                  isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/70 border-slate-800'
+                }`}>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <FileCode className="w-5 h-5 text-cyan-500" />
+                      <h4 className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        Complete Backup (JSON)
+                      </h4>
+                    </div>
+                    <p className={`text-xs ${isLight ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>
+                      Export all application state including sessions, tasks, settings, and streak history as a backup file.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleExportJSON}
+                    className="w-full py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download JSON Backup
+                  </button>
                 </div>
               </div>
             </div>
