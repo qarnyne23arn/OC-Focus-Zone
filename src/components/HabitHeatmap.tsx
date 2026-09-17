@@ -8,15 +8,15 @@ interface HabitHeatmapProps {
 }
 
 export const HabitHeatmap: React.FC<HabitHeatmapProps> = ({ sessions, isLight }) => {
-  const [timeRange, setTimeRange] = useState<30 | 90>(30);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
-
   const formatDateString = (d: Date): string => {
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   };
+
+  const [selectedDate, setSelectedDate] = useState<string>(() => formatDateString(new Date()));
+  const [timeRange, setTimeRange] = useState<30 | 90>(30);
 
   const statsMap = React.useMemo(() => {
     const map = new Map<string, { minutes: number; count: number; sessions: StudySession[] }>();
@@ -157,19 +157,27 @@ export const HabitHeatmap: React.FC<HabitHeatmapProps> = ({ sessions, isLight })
         ? 'bg-cyan-200 border-cyan-400 text-slate-900 font-bold' 
         : 'bg-cyan-950 border-cyan-500 text-cyan-200 font-bold shadow-[0_0_8px_rgba(6,182,212,0.3)]';
     }
-    if (minutes < 60) {
+    if (minutes < 120) {
       return isLight 
         ? 'bg-cyan-400 border-cyan-600 text-slate-950 font-extrabold' 
         : 'bg-cyan-700 border-cyan-400 text-white font-extrabold shadow-[0_0_10px_rgba(6,182,212,0.5)]';
     }
-    if (minutes < 120) {
+    if (minutes < 240) {
+      // 2 hours to 4 hours: Brightest Cyan / Accent color
       return isLight 
         ? 'bg-cyan-600 border-cyan-800 text-white font-black' 
-        : 'bg-cyan-500 border-cyan-200 text-slate-950 font-black shadow-[0_0_12px_rgba(6,182,212,0.7)]';
+        : 'bg-cyan-400 border-cyan-200 text-slate-950 font-black shadow-[0_0_14px_rgba(6,182,212,0.9)]';
     }
+    if (minutes < 360) {
+      // 4 hours to 6 hours: Yellow
+      return isLight 
+        ? 'bg-amber-400 border-amber-600 text-slate-950 font-black' 
+        : 'bg-amber-400 border-amber-200 text-slate-950 font-black shadow-[0_0_14px_rgba(251,191,36,0.9)]';
+    }
+    // 6 hours+: Red
     return isLight 
-      ? 'bg-emerald-600 border-emerald-700 text-white font-black' 
-      : 'bg-emerald-400 border-emerald-200 text-slate-950 font-black shadow-[0_0_14px_rgba(52,211,153,0.8)]';
+      ? 'bg-red-600 border-red-700 text-white font-black' 
+      : 'bg-red-500 border-red-300 text-white font-black shadow-[0_0_16px_rgba(239,68,68,0.9)]';
   };
 
   const weeks = React.useMemo(() => {
@@ -186,49 +194,59 @@ export const HabitHeatmap: React.FC<HabitHeatmapProps> = ({ sessions, isLight })
   }, [daysList]);
 
   return (
-    <div className={`p-5 sm:p-6 rounded-3xl border space-y-5 shadow-lg ${
-      isLight ? 'bg-white border-slate-300 text-slate-900' : 'bg-[#061228] border-cyan-500/30 text-slate-100 shadow-[0_10px_35px_rgba(0,0,0,0.5)]'
-    }`}>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+    <div className="w-full space-y-4 font-sans select-none" id="habit-heatmap-container">
+      {/* Header controls & stats */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500">
-            <Flame className="w-5 h-5 animate-pulse" />
+          <div className="w-10 h-10 rounded-2xl bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-cyan-400">
+            <Flame className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base sm:text-lg font-extrabold tracking-tight flex items-center gap-2">
-              Daily Study Streak & Habit Heatmap
+            <h3 className={`text-sm font-extrabold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              Focus Consistency Heatmap
             </h3>
-            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-cyan-300/70'}`}>
-              Click any date circle (e.g. 21) to inspect that day's specific study sessions.
+            <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+              Track daily habits and deep work intensity
             </p>
           </div>
         </div>
 
-        <div className={`flex items-center p-1 rounded-2xl border ${
-          isLight ? 'bg-slate-100 border-slate-300' : 'bg-[#091a38] border-cyan-500/30'
-        }`}>
-          {([30, 90] as const).map((r) => (
+        <div className="flex items-center gap-2">
+          <div className={`flex rounded-xl p-1 border ${
+            isLight ? 'bg-slate-200 border-slate-300' : 'bg-[#0a1b38] border-cyan-500/30'
+          }`}>
             <button
-              key={r}
               type="button"
-              onClick={() => setTimeRange(r)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                timeRange === r
-                  ? 'bg-cyan-500 text-slate-950 shadow-md font-black'
-                  : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-300 hover:text-white'
+              onClick={() => setTimeRange(30)}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                timeRange === 30
+                  ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                  : isLight ? 'text-slate-700 hover:text-slate-950' : 'text-slate-400 hover:text-white'
               }`}
             >
-              {r} Days
+              30 Days
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={() => setTimeRange(90)}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition ${
+                timeRange === 90
+                  ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                  : isLight ? 'text-slate-700 hover:text-slate-950' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              90 Days
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Streak cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className={`p-3.5 rounded-2xl border ${
           isLight ? 'bg-slate-50 border-slate-300' : 'bg-[#091a38] border-cyan-500/25'
         }`}>
-          <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-500">
+          <div className="flex items-center gap-1.5 text-[11px] font-bold text-amber-400">
             <Flame className="w-4 h-4" />
             Current Streak
           </div>
@@ -278,15 +296,17 @@ export const HabitHeatmap: React.FC<HabitHeatmapProps> = ({ sessions, isLight })
         isLight ? 'bg-slate-50 border-slate-300' : 'bg-[#081730] border-cyan-500/25'
       }`}>
         <div className="min-w-[550px]">
-          <div className="flex items-center gap-2 justify-end pb-3">
+          {/* Legend */}
+          <div className="flex items-center gap-2 justify-end pb-3 flex-wrap">
             <span className="text-xs font-semibold text-slate-400 mr-1">Activity Level:</span>
             <span className="text-[10px] text-slate-400">0m</span>
-            <div className={`w-6 h-6 rounded-full border ${isLight ? 'bg-slate-200 border-slate-300' : 'bg-[#102244] border-sky-500/25'}`} />
-            <div className={`w-6 h-6 rounded-full border ${isLight ? 'bg-cyan-200 border-cyan-400' : 'bg-cyan-950 border-cyan-500'}`} />
-            <div className={`w-6 h-6 rounded-full border ${isLight ? 'bg-cyan-400 border-cyan-600' : 'bg-cyan-700 border-cyan-400'}`} />
-            <div className={`w-6 h-6 rounded-full border ${isLight ? 'bg-cyan-600 border-cyan-800' : 'bg-cyan-500 border-cyan-200'}`} />
-            <div className={`w-6 h-6 rounded-full border ${isLight ? 'bg-emerald-600 border-emerald-700' : 'bg-emerald-400 border-emerald-200'}`} />
-            <span className="text-[10px] text-slate-400 ml-1">120m+</span>
+            <div className={`w-5 h-5 rounded-md border ${isLight ? 'bg-slate-200 border-slate-300' : 'bg-[#102244] border-sky-500/25'}`} title="0m" />
+            <div className={`w-5 h-5 rounded-md border ${isLight ? 'bg-cyan-200 border-cyan-400' : 'bg-cyan-950 border-cyan-500'}`} title="<30m" />
+            <div className={`w-5 h-5 rounded-md border ${isLight ? 'bg-cyan-400 border-cyan-600' : 'bg-cyan-700 border-cyan-400'}`} title="30m-2h" />
+            <div className={`w-5 h-5 rounded-md border ${isLight ? 'bg-cyan-600 border-cyan-800' : 'bg-cyan-400 border-cyan-200'}`} title="2h-4h" />
+            <div className={`w-5 h-5 rounded-md border ${isLight ? 'bg-amber-400 border-amber-600' : 'bg-amber-400 border-amber-200'}`} title="4h-6h" />
+            <div className={`w-5 h-5 rounded-md border ${isLight ? 'bg-red-600 border-red-700' : 'bg-red-500 border-red-300'}`} title="6h+" />
+            <span className="text-[10px] text-slate-400 ml-1">6h+ (Red)</span>
           </div>
 
           <div className="flex gap-2 justify-center py-3">
@@ -336,36 +356,44 @@ export const HabitHeatmap: React.FC<HabitHeatmapProps> = ({ sessions, isLight })
                 <p className="text-xs font-medium">No recorded focus sessions on this date.</p>
               </div>
             ) : (
-              <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
-                {activeSelectedData.sessions.map((s, idx) => (
-                  <div
-                    key={s.id || idx}
-                    className={`p-3 rounded-xl border flex items-center justify-between text-xs transition ${
-                      isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#091833] border-sky-500/20'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
-                        <BookOpen className="w-3.5 h-3.5" />
-                      </div>
-                      <div>
-                        <div className="font-bold">{s.subject || 'Focus Session'}</div>
-                        <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                          Mode: {s.mode} • {s.timestamp ? new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+              <div className="space-y-2 max-h-[240px] overflow-y-auto pr-1">
+                {activeSelectedData.sessions.map((s, idx) => {
+                  const sessionTime = s.timestamp ? new Date(s.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : `Hour: ${s.hour}:00`;
+                  const modeLabel = s.mode === 'focus' ? 'Deep Focus' : s.mode === 'short_break' ? 'Short Break' : 'Long Break';
+                  const focusMins = s.actualMinutes || s.durationMinutes;
+                  return (
+                    <div
+                      key={s.id || idx}
+                      className={`p-3.5 rounded-xl border flex items-center justify-between text-xs transition ${
+                        isLight ? 'bg-white border-slate-300 shadow-sm' : 'bg-[#091833] border-cyan-500/30'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shrink-0 font-bold">
+                          <BookOpen className="w-4 h-4" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-bold truncate text-sm">{s.subject || 'Focus Study'}</div>
+                          <div className={`text-[11px] flex items-center gap-2 mt-0.5 ${isLight ? 'text-slate-600 font-semibold' : 'text-slate-300'}`}>
+                            <span className="px-1.5 py-0.5 rounded bg-cyan-500/10 text-cyan-400 font-semibold uppercase text-[9px] border border-cyan-500/20">
+                              {modeLabel}
+                            </span>
+                            <span>• Recorded at <strong className="font-mono text-cyan-300">{sessionTime}</strong></span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-3">
-                      <div className="text-right font-mono">
-                        <div className="font-bold text-cyan-400">{s.actualMinutes || s.durationMinutes}m</div>
-                        <div className={`text-[9px] ${s.completed ? 'text-emerald-400' : 'text-amber-400'}`}>
-                          {s.completed ? 'Completed' : 'Partial'}
+                      <div className="flex items-center gap-3 shrink-0 ml-3">
+                        <div className="text-right font-mono">
+                          <div className="font-bold text-sm text-cyan-400">{focusMins} mins focus</div>
+                          <div className={`text-[10px] font-bold ${s.completed ? 'text-emerald-400' : 'text-amber-400'}`}>
+                            {s.completed ? '✓ Completed' : '⚡ Partial'}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

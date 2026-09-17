@@ -64,12 +64,12 @@ export const SystemInitiateSplash: React.FC<SystemInitiateSplashProps> = ({
         {/* Golden Sand Clock Logo Container */}
         <div className="relative mb-6">
           <div className="absolute -inset-4 bg-cyan-500/25 rounded-3xl blur-2xl animate-pulse" />
-          <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-black border border-cyan-500/60 p-3 sm:p-4 shadow-[0_0_50px_rgba(6,182,212,0.45)] flex items-center justify-center overflow-hidden">
+          <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-3xl bg-black border border-cyan-500/60 p-1.5 sm:p-2 shadow-[0_0_50px_rgba(6,182,212,0.45)] flex items-center justify-center overflow-hidden">
             <img
               src="/sandclock.svg"
               alt="OC Sand Clock Logo"
               referrerPolicy="no-referrer"
-              className="w-full h-full object-contain filter drop-shadow-[0_0_20px_rgba(6,182,212,0.9)]"
+              className="w-full h-full object-cover rounded-2xl filter drop-shadow-[0_0_20px_rgba(6,182,212,0.9)]"
             />
           </div>
         </div>

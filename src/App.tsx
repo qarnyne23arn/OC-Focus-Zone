@@ -94,6 +94,7 @@ import {
 } from './utils/audio';
 import { CircularTimer } from './components/CircularTimer';
 import { ProductivityChart } from './components/ProductivityChart';
+import { FocusHoursChart } from './components/FocusHoursChart';
 import { GoalProgressBar } from './components/GoalProgressBar';
 import { WebsiteBlocker } from './components/WebsiteBlocker';
 import { BlockedSiteModal } from './components/BlockedSiteModal';
@@ -1675,17 +1676,8 @@ export default function App() {
               />
             </div>
 
-            {/* 3. Productivity Flow Graph with Live Data & Interactive Hours */}
-            <div className="relative z-10">
-              <ProductivityChart
-                sessions={sessions}
-                activeDateFilter={dateFilter}
-                isLight={isLight}
-              />
-            </div>
-
-            {/* 4. Action Buttons (Pause / Start & Reset - Exact Match) */}
-            <div className="mt-5 grid grid-cols-2 gap-3 relative z-10">
+            {/* 3. Action Buttons (Pause / Start & Reset - Right Under Clock) */}
+            <div className="mt-3 grid grid-cols-2 gap-3 relative z-10">
               <button
                 type="button"
                 id="timer-primary-toggle-button"
@@ -1757,6 +1749,15 @@ export default function App() {
                 <History className="w-3 h-3" />
                 Restore Session
               </button>
+            </div>
+
+            {/* 4. Productivity Flow Graph with Live Data & Interactive Hours */}
+            <div className="mt-5 relative z-10">
+              <ProductivityChart
+                sessions={sessions}
+                activeDateFilter={dateFilter}
+                isLight={isLight}
+              />
             </div>
 
             {/* 5. Two Bottom Stats Cards (Exact Match to Image) */}
@@ -2064,7 +2065,7 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Hourly Productivity Wave Visualizer (Redesigned) */}
+                {/* Monthly Activity Line Chart */}
                 <div className={`p-4 rounded-2xl border ${
                   isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
                 }`}>
@@ -2073,7 +2074,7 @@ export default function App() {
                   }`}>
                     <span className="flex items-center gap-1.5">
                       <BarChart2 className={`w-3.5 h-3.5 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
-                      Hourly Chronotype Productivity Wave
+                      Monthly Activity → Line Chart
                     </span>
                     <button
                       type="button"
@@ -2085,9 +2086,8 @@ export default function App() {
                       Detailed Analytics →
                     </button>
                   </div>
-                  <ProductivityChart
+                  <FocusHoursChart
                     sessions={sessions}
-                    activeDateFilter={dateFilter}
                     isLight={isLight}
                   />
                 </div>

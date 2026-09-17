@@ -5,8 +5,7 @@ import {
   RotateCcw, 
   Plus, 
   X,
-  BookOpen, 
-  Minimize2
+  BookOpen 
 } from 'lucide-react';
 import { TimerMode } from '../types';
 import { CircularTimer } from './CircularTimer';
@@ -144,55 +143,55 @@ export const ZenSanctuaryModal: React.FC<ZenSanctuaryModalProps> = ({
           />
         </div>
 
-        {/* 3. Bottom Action Buttons */}
+        {/* 3. Bottom Action Buttons (Uniform Width & Height) */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
-          {/* Main Glowing Button: Begin Flow / Pause */}
+          {/* Main Glowing Button: Begin Flow / Pause (Vibrant Cyan) */}
           <button
             type="button"
             onClick={onToggleTimer}
-            className="py-3.5 px-8 rounded-full bg-gradient-to-r from-[#006aff] to-[#00c8ff] hover:from-[#0057d9] hover:to-[#00b0e6] active:scale-95 text-white font-extrabold text-base tracking-wide flex items-center gap-2.5 shadow-[0_10px_35px_rgba(0,180,255,0.4)] transition cursor-pointer"
+            className="w-40 sm:w-44 py-3.5 px-4 rounded-full bg-gradient-to-r from-[#00e5ff] to-[#0088ff] hover:from-[#00c9e2] hover:to-[#0075e0] active:scale-95 text-slate-950 font-black text-sm sm:text-base tracking-wide flex items-center justify-center gap-2 shadow-[0_10px_35px_rgba(0,229,255,0.5)] transition cursor-pointer"
           >
             {isRunning ? (
               <>
-                <Pause className="w-5 h-5 fill-white" />
-                <span>Pause Study</span>
+                <Pause className="w-4 h-4 fill-slate-950 shrink-0" />
+                <span className="truncate">Pause Study</span>
               </>
             ) : (
               <>
-                <Play className="w-5 h-5 fill-white" />
-                <span>Begin Flow</span>
+                <Play className="w-4 h-4 fill-slate-950 shrink-0" />
+                <span className="truncate">Begin Flow</span>
               </>
             )}
           </button>
 
-          {/* Reset Button */}
+          {/* Reset Button (Uniform Size) */}
           <button
             type="button"
             onClick={onReset}
-            className={`py-3.5 px-6 rounded-full font-bold text-sm flex items-center gap-2 transition cursor-pointer shadow-md ${
+            className={`w-40 sm:w-44 py-3.5 px-4 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow-md ${
               isLight
                 ? 'bg-[#dce9ed] hover:bg-slate-300 border border-slate-300 text-slate-800'
                 : 'bg-[#091733]/90 hover:bg-[#0f2552] border border-[#1b3a69] hover:border-cyan-500/40 text-sky-200 hover:text-white'
             }`}
             title="Reset to planned duration"
           >
-            <RotateCcw className={`w-4 h-4 ${isLight ? 'text-slate-700' : 'text-sky-400'}`} />
-            <span>Reset</span>
+            <RotateCcw className={`w-4 h-4 shrink-0 ${isLight ? 'text-slate-700' : 'text-sky-400'}`} />
+            <span className="truncate">Reset</span>
           </button>
 
-          {/* +5m Flow Button */}
+          {/* +5m Flow Button (Uniform Size) */}
           <button
             type="button"
             onClick={() => onExtend(5)}
-            className={`py-3.5 px-6 rounded-full font-bold text-sm flex items-center gap-2 transition cursor-pointer shadow-md ${
+            className={`w-40 sm:w-44 py-3.5 px-4 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow-md ${
               isLight
                 ? 'bg-[#dce9ed] hover:bg-slate-300 border border-slate-300 text-slate-800'
                 : 'bg-[#091733]/90 hover:bg-[#0f2552] border border-[#1b3a69] hover:border-cyan-500/40 text-sky-200 hover:text-white'
             }`}
             title="Add 5 more minutes"
           >
-            <Plus className={`w-4 h-4 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
-            <span>+5m Flow</span>
+            <Plus className={`w-4 h-4 shrink-0 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
+            <span className="truncate">+5m Flow</span>
           </button>
         </div>
 
