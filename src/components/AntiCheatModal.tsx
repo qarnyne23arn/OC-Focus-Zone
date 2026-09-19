@@ -45,7 +45,7 @@ export const AntiCheatModal: React.FC<AntiCheatModalProps> = ({
           <h3 className={`text-xl font-extrabold tracking-tight ${
             isLight ? 'text-slate-900' : 'text-white'
           }`}>
-            Study Tab Stray Detected!
+            Focus Tab Stray Detected!
           </h3>
           <p className={`text-xs max-w-xs mx-auto ${
             isLight ? 'text-slate-600' : 'text-slate-400'

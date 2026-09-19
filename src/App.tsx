@@ -32,6 +32,7 @@ import {
   X,
   Sun,
   Moon,
+  BatteryCharging,
   Settings as SettingsIcon,
   User as UserIcon,
   LogIn as LogInIcon,
@@ -53,7 +54,8 @@ import {
   ThemeMode,
   FocusProtocol,
   AppSettings,
-  GoalItem
+  GoalItem,
+  DistractionLogItem
 } from './types';
 import { 
   loadLocalSessions, 
@@ -84,7 +86,9 @@ import {
   loadLocalFloatingDockHidden,
   saveLocalFloatingDockHidden,
   loadLocalGoals,
-  saveLocalGoals
+  saveLocalGoals,
+  loadLocalDistractionLog,
+  saveLocalDistractionLog
 } from './utils/storage';
 import { 
   playStartChime, 
@@ -183,6 +187,7 @@ export default function App() {
 
   // Stats & Distraction counters
   const [distractionCount, setDistractionCount] = useState<number>(14);
+  const [distractionLog, setDistractionLog] = useState<DistractionLogItem[]>(loadLocalDistractionLog);
   const [alerts, setAlerts] = useState<MilestoneAlert[]>([]);
 
   // User Authentication & Multi-Device Auto Sync State
@@ -931,6 +936,8 @@ export default function App() {
     setIsEditingTaskInline(false);
   };
 
+
+
   // Task List Handlers
   const handleAddTask = (name: string, targetPomodoros = 4, priority: 'low' | 'medium' | 'high' = 'medium') => {
     const newTask: TaskItem = {
@@ -991,6 +998,21 @@ export default function App() {
   const handleSimulateBlock = (domain: string) => {
     setDistractionCount((prev) => prev + 1);
     setSimulatedBlockedDomain(domain);
+    const newItem: DistractionLogItem = {
+      id: 'd-' + Math.random().toString(36).substring(2, 9),
+      domain,
+      timestamp: new Date().toISOString(),
+      action: 'Blocked & Shielded',
+    };
+    const updated = [newItem, ...distractionLog];
+    setDistractionLog(updated);
+    saveLocalDistractionLog(updated);
+  };
+
+  const handleClearDistractionLog = () => {
+    setDistractionLog([]);
+    saveLocalDistractionLog([]);
+    addAlert('Log Cleared', 'Visited & intercepted sites history cleared.', 'milestone');
   };
 
   // Full System Reset Handler
@@ -1027,7 +1049,35 @@ export default function App() {
     const updated = [reflection, ...reflections];
     setReflections(updated);
     saveLocalReflections(updated);
+
+    // Update latest session with energy_after
+    setSessions((prev) => {
+      if (prev.length === 0) return prev;
+      const copy = [...prev];
+      copy[0] = {
+        ...copy[0],
+        energy_after: reflection.energyLevel,
+      };
+      saveLocalSessions(copy);
+      return copy;
+    });
+
     addAlert('Reflection Recorded', `Energy rating ${reflection.energyLevel}/5 saved for "${reflection.taskName}"`, 'milestone');
+  };
+
+  const handleLogBreakAdherence = (taken: boolean) => {
+    setSessions((prev) => {
+      if (prev.length === 0) return prev;
+      const copy = [...prev];
+      copy[0] = {
+        ...copy[0],
+        break_scheduled: true,
+        break_taken: taken,
+      };
+      saveLocalSessions(copy);
+      return copy;
+    });
+    addAlert('Break Adherence Logged', taken ? 'Recorded: Break Taken ✓' : 'Recorded: Break Skipped ✕', 'milestone');
   };
 
   // 1-Click Science-Backed Focus Protocol Activation
@@ -1206,47 +1256,9 @@ export default function App() {
                 Focus Sanctuary
               </span>
             </div>
-            <p className={`text-[11px] hidden sm:block ${isLight ? 'text-slate-500' : 'text-sky-200/60'}`}>
-              Deep study timer with anti-cheat & distraction shield
-            </p>
+
           </div>
         </div>
-
-        {/* User Account / Multi-Device Sign In Button (Replacing Enter Task section on desktop) */}
-        {authData.user ? (
-          <button
-            type="button"
-            onClick={() => setIsSettingsModalOpen(true)}
-            className={`hidden md:flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
-              isLight
-                ? 'bg-cyan-50 border-cyan-300 text-slate-900 shadow-sm hover:bg-cyan-100'
-                : 'bg-[#061022] border-cyan-500/40 text-white hover:border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
-            }`}
-            title={`Signed in as ${authData.user.email}. Auto-syncing across devices. Click for settings & change password.`}
-          >
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-cyan-600 to-sky-400 text-slate-950 font-black text-[11px] flex items-center justify-center uppercase shadow-sm">
-              {authData.user.name ? authData.user.name[0] : 'U'}
-            </div>
-            <span className="truncate max-w-[120px]">{authData.user.name}</span>
-            <span 
-              className={`w-2 h-2 rounded-full ${isAccountSyncing ? 'bg-cyan-400 animate-spin' : 'bg-emerald-400 animate-pulse'}`} 
-              title={isAccountSyncing ? 'Synchronizing with cloud...' : 'Auto-synced across devices'} 
-            />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              setAuthModalInitialMode('login');
-              setIsAuthModalOpen(true);
-            }}
-            className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:brightness-105 active:scale-95 transition cursor-pointer"
-            title="Sign in or create account for multi-device auto sync"
-          >
-            <LogInIcon className="w-3.5 h-3.5" />
-            <span>Log In / Sign Up</span>
-          </button>
-        )}
 
         {/* Right Status Badges & Quick Action Controls (Hidden on phone, shown on sm+; actions moved to Command Deck on phone) */}
         <div className="hidden sm:flex items-center gap-2 sm:gap-2.5 flex-wrap">
@@ -1254,15 +1266,14 @@ export default function App() {
           <button
             type="button"
             onClick={() => setShowZenSanctuary(true)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer shadow-sm transition ${
+            className={`p-2 rounded-xl border transition cursor-pointer shadow-sm ${
               isLight
                 ? 'bg-cyan-50 hover:bg-cyan-100 border-cyan-300 text-cyan-800'
                 : 'bg-gradient-to-r from-sky-900/70 to-cyan-900/70 hover:from-sky-800 hover:to-cyan-800 border border-cyan-500/30 text-cyan-200'
             }`}
             title="Ambient Fullscreen Focus Mode (Zen Study Sanctuary) - Shortcut: F"
           >
-            <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
-            <span className="text-[11px] hidden sm:inline">Zen Sanctuary (F)</span>
+            <Sparkles className="w-4 h-4 text-cyan-500" />
           </button>
 
           {/* Floating Dock Restore Button (visible when dock is hidden) */}
@@ -1295,47 +1306,41 @@ export default function App() {
                 'anti_cheat'
               );
             }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
+            className={`p-2 rounded-xl border transition cursor-pointer ${
               strictAntiCheatMode
                 ? 'bg-rose-950/40 border-rose-500/40 text-rose-300'
                 : isLight
                   ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
                   : 'bg-[#061022] border-sky-500/20 text-slate-400 hover:text-slate-200'
             }`}
-            title="Strict Mode / Focus Lock: Detects when you leave study tab"
+            title={strictAntiCheatMode ? 'Anti-Cheat: Strict (Click to disable)' : 'Anti-Cheat: Off (Click to enable)'}
           >
-            <ShieldCheck className={`w-3.5 h-3.5 ${strictAntiCheatMode ? 'text-rose-400' : isLight ? 'text-slate-600' : 'text-slate-400'}`} />
-            <span className="text-[11px] hidden sm:inline">
-              Anti-Cheat: {strictAntiCheatMode ? 'Strict' : 'Off'}
-            </span>
+            <ShieldCheck className={`w-4 h-4 ${strictAntiCheatMode ? 'text-rose-400' : isLight ? 'text-slate-600' : 'text-slate-400'}`} />
           </button>
 
           {/* Cloud Sync Status */}
           <button
             type="button"
             onClick={() => setShowSyncModal(true)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border transition cursor-pointer text-xs ${
+            className={`p-2 rounded-xl border transition cursor-pointer ${
               isLight
                 ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
                 : 'bg-[#061022] border-sky-500/20 text-sky-300 hover:text-white hover:border-cyan-400'
             }`}
-            title="Cloud Sync Across Devices"
+            title={syncState.isOnline ? 'Cloud Sync: Online' : 'Cloud Sync: Offline'}
           >
             {syncState.isOnline ? (
-              <Cloud className="w-3.5 h-3.5 text-cyan-500" />
+              <Cloud className="w-4 h-4 text-cyan-500" />
             ) : (
-              <WifiOff className="w-3.5 h-3.5 text-slate-400" />
+              <WifiOff className="w-4 h-4 text-slate-400" />
             )}
-            <span className="text-[11px] font-medium hidden lg:inline">
-              {syncState.isOnline ? 'Cloud' : 'Offline'}
-            </span>
           </button>
 
           {/* Website Blocker Shield */}
           <button
             type="button"
             onClick={() => setShowBlockerModal(true)}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs transition cursor-pointer ${
+            className={`p-2 rounded-xl border transition cursor-pointer ${
               isRunning
                 ? isLight
                   ? 'bg-cyan-100 border-cyan-300 text-cyan-800'
@@ -1344,12 +1349,9 @@ export default function App() {
                   ? 'bg-slate-100 border-slate-300 text-slate-700 hover:bg-slate-200 hover:text-slate-900'
                   : 'bg-[#061022] border-sky-500/20 text-slate-400 hover:text-sky-300'
             }`}
-            title="Website Distraction Shield"
+            title={isRunning ? 'Website Distraction Shield: Active' : 'Website Distraction Shield: Standby'}
           >
-            <Shield className="w-3.5 h-3.5 text-cyan-500" />
-            <span className="text-[11px] font-medium hidden lg:inline">
-              Shield: {isRunning ? 'Active' : 'Standby'}
-            </span>
+            <Shield className="w-4 h-4 text-cyan-500" />
           </button>
 
           {/* Goals & Deadlines Tracker Button */}
@@ -1364,7 +1366,7 @@ export default function App() {
                 if (tabsNav) tabsNav.scrollIntoView({ behavior: 'smooth' });
               }
             }}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs transition cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl border text-xs transition cursor-pointer ${
               desktopTab === 'goals' && !isClockExpanded
                 ? 'bg-cyan-500 text-slate-950 border-cyan-400 font-bold shadow-sm'
                 : isLight
@@ -1373,10 +1375,10 @@ export default function App() {
             }`}
             title="Daily, Monthly & Long-Term Goals with Deadlines & Reminders"
           >
-            <Target className="w-3.5 h-3.5 text-cyan-500" />
-            <span className="text-[11px] font-medium hidden lg:inline">Goals</span>
+            <Target className="w-4 h-4 text-cyan-500" />
+            <span className="text-xs font-medium">Goals</span>
             {goals.filter((g) => !g.completed).length > 0 && (
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold ${
                 desktopTab === 'goals' && !isClockExpanded
                   ? 'bg-slate-950 text-white'
                   : isLight ? 'bg-cyan-100 text-cyan-800' : 'bg-cyan-500/20 text-cyan-300'
@@ -1456,7 +1458,41 @@ export default function App() {
             <SettingsIcon className={`w-4 h-4 ${isLight ? 'text-slate-800' : 'text-cyan-400'}`} />
           </button>
 
-
+          {/* User Account / Multi-Device Sign In Button (At the most right) */}
+          {authData.user ? (
+            <button
+              type="button"
+              onClick={() => setIsSettingsModalOpen(true)}
+              className={`hidden md:flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                isLight
+                  ? 'bg-cyan-50 border-cyan-300 text-slate-900 shadow-sm hover:bg-cyan-100'
+                  : 'bg-[#061022] border-cyan-500/40 text-white hover:border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]'
+              }`}
+              title={`Signed in as ${authData.user.email}. Auto-syncing across devices. Click for settings & change password.`}
+            >
+              <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-cyan-600 to-sky-400 text-slate-950 font-black text-[11px] flex items-center justify-center uppercase shadow-sm">
+                {authData.user.name ? authData.user.name[0] : 'U'}
+              </div>
+              <span className="truncate max-w-[120px]">{authData.user.name}</span>
+              <span 
+                className={`w-2 h-2 rounded-full ${isAccountSyncing ? 'bg-cyan-400 animate-spin' : 'bg-emerald-400 animate-pulse'}`} 
+                title={isAccountSyncing ? 'Synchronizing with cloud...' : 'Auto-synced across devices'} 
+              />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setAuthModalInitialMode('login');
+                setIsAuthModalOpen(true);
+              }}
+              className="hidden md:flex items-center gap-1.5 px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-[0_0_15px_rgba(6,182,212,0.35)] hover:brightness-105 active:scale-95 transition cursor-pointer"
+              title="Sign in or create account for multi-device auto sync"
+            >
+              <LogInIcon className="w-3.5 h-3.5" />
+              <span>Log In / Sign Up</span>
+            </button>
+          )}
         </div>
       </header>
 
@@ -1491,11 +1527,7 @@ export default function App() {
                     </span>
                   )}
                 </div>
-                <p className={`text-xs sm:text-sm mt-0.5 font-normal truncate ${
-                  isLight ? 'text-slate-600' : 'text-sky-200/60'
-                }`}>
-                  Stay consistent. See your progress.
-                </p>
+
               </div>
 
               {/* Action Buttons: Expand / Restore & Date Filter */}
@@ -1607,6 +1639,35 @@ export default function App() {
               </button>
             </div>
 
+            {mode !== 'focus' && (
+              <div className={`p-3 rounded-2xl border flex items-center justify-between gap-2 my-2 relative z-10 ${
+                isLight ? 'bg-emerald-50 border-emerald-300 text-emerald-900' : 'bg-emerald-950/30 border-emerald-500/30 text-emerald-200'
+              }`}>
+                <div className="flex items-center gap-2">
+                  <BatteryCharging className="w-4 h-4 text-emerald-500 shrink-0" />
+                  <span className="text-xs font-semibold">Scheduled Break: Did you take it?</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleLogBreakAdherence(true)}
+                    className="px-2.5 py-1 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[11px] transition cursor-pointer shadow-sm"
+                  >
+                    Take Break ✓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLogBreakAdherence(false)}
+                    className={`px-2.5 py-1 rounded-xl border text-[11px] font-bold transition cursor-pointer ${
+                      isLight ? 'bg-white border-slate-300 text-slate-700 hover:bg-slate-100' : 'bg-slate-900 border-slate-700 text-slate-300 hover:bg-slate-800'
+                    }`}
+                  >
+                    Skip ✕
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* EDITABLE TASK NAME (Explicitly requested by user!) */}
             <div className="mb-2 relative z-10">
               {isEditingTaskInline ? (
@@ -1648,16 +1709,18 @@ export default function App() {
                   title="Click to enter or edit task name"
                 >
                   <BookOpen className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
-                  <span className={`text-xs font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Enter Task:</span>
+                  <span className={`text-xs font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>TASK:</span>
                   <span className={`font-semibold truncate max-w-[240px] underline decoration-dashed underline-offset-4 transition ${
                     isLight ? 'text-slate-900 decoration-cyan-600/50 group-hover:text-cyan-700' : 'text-slate-200 decoration-sky-500/40 group-hover:text-cyan-200'
                   }`}>
-                    {activeTaskName || 'Enter task...'}
+                    {activeTaskName || 'TASK'}
                   </span>
                   <Edit2 className={`w-3 h-3 transition ${isLight ? 'text-cyan-700 opacity-70 group-hover:opacity-100' : 'text-cyan-400 opacity-60 group-hover:opacity-100'}`} />
                 </div>
               )}
             </div>
+
+
 
             {/* 2. Prominent Circular Countdown Timer Dial (Exact Match to Image) */}
             <div className="my-1 relative z-10 flex justify-center">
@@ -1682,7 +1745,7 @@ export default function App() {
                 type="button"
                 id="timer-primary-toggle-button"
                 onClick={handleToggleTimer}
-                className="py-3 px-6 rounded-full bg-gradient-to-r from-[#006aff] to-[#00b4ff] hover:from-[#0059e6] hover:to-[#009ee0] active:scale-[0.98] text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(0,110,255,0.45)] transition-all cursor-pointer"
+                className="py-3 px-6 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 active:scale-[0.98] text-white font-bold text-sm tracking-wide flex items-center justify-center gap-2 shadow-[0_8px_25px_rgba(6,182,212,0.35)] transition-all cursor-pointer"
               >
                 {isRunning ? (
                   <>
@@ -1751,76 +1814,8 @@ export default function App() {
               </button>
             </div>
 
-            {/* 4. Productivity Flow Graph with Live Data & Interactive Hours */}
-            <div className="mt-5 relative z-10">
-              <ProductivityChart
-                sessions={sessions}
-                activeDateFilter={dateFilter}
-                isLight={isLight}
-              />
-            </div>
-
-            {/* 5. Two Bottom Stats Cards (Exact Match to Image) */}
-            <div className="mt-5 grid grid-cols-2 gap-3.5 relative z-10">
-              {/* Focus Time Card */}
-              <div 
-                id="stat-card-focus-time"
-                className={`p-4 rounded-2xl border flex items-center gap-3.5 transition shadow-sm ${
-                  isLight
-                    ? 'bg-slate-50 border-slate-200'
-                    : 'bg-[#091833]/90 border-sky-500/15 hover:border-sky-500/30'
-                }`}
-              >
-                <div className={`w-11 h-11 rounded-full border flex items-center justify-center shrink-0 ${
-                  isLight
-                    ? 'bg-cyan-50 border-cyan-200 text-cyan-700'
-                    : 'bg-[#051a3a] border-[#0d3b6f] text-cyan-400'
-                }`}>
-                  <Clock className="w-5 h-5 stroke-[2.2]" />
-                </div>
-                <div>
-                  <div className={`text-[11px] font-medium ${isLight ? 'text-slate-500' : 'text-sky-300/70'}`}>
-                    Focus Time
-                  </div>
-                  <div className={`text-xl sm:text-2xl font-extrabold font-['Plus_Jakarta_Sans'] ${
-                    isLight ? 'text-slate-900' : 'text-white'
-                  }`}>
-                    {todayFocusMinutes} min
-                  </div>
-                </div>
-              </div>
-
-              {/* Sessions Card */}
-              <div 
-                id="stat-card-sessions"
-                className={`p-4 rounded-2xl border flex items-center gap-3.5 transition shadow-sm ${
-                  isLight
-                    ? 'bg-slate-50 border-slate-200'
-                    : 'bg-[#091833]/90 border-sky-500/15 hover:border-sky-500/30'
-                }`}
-              >
-                <div className={`w-11 h-11 rounded-full border flex items-center justify-center shrink-0 ${
-                  isLight
-                    ? 'bg-cyan-50 border-cyan-200 text-cyan-700'
-                    : 'bg-[#051a3a] border-[#0d3b6f] text-cyan-400'
-                }`}>
-                  <BarChart2 className="w-5 h-5 stroke-[2.2]" />
-                </div>
-                <div>
-                  <div className={`text-[11px] font-medium ${isLight ? 'text-slate-500' : 'text-sky-300/70'}`}>
-                    Sessions
-                  </div>
-                  <div className={`text-xl sm:text-2xl font-extrabold font-['Plus_Jakarta_Sans'] ${
-                    isLight ? 'text-slate-900' : 'text-white'
-                  }`}>
-                    {todaySessionCount}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* 6. Goal Progress Bar Component */}
-            <div className="relative z-10">
+            {/* 4. Goal Progress Bar Component (Daily Productivity Goal Tracker) */}
+            <div className="mt-4 relative z-10">
               <GoalProgressBar
                 currentMinutes={todayFocusMinutes}
                 goalMinutes={settings.dailyGoalMinutes}
@@ -1838,6 +1833,15 @@ export default function App() {
                   }
                 }}
                 activeGoalsCount={goals.filter((g) => !g.completed).length}
+              />
+            </div>
+
+            {/* 5. Productivity Flow Graph with Live Data & Interactive Hours */}
+            <div className="mt-5 relative z-10">
+              <ProductivityChart
+                sessions={sessions}
+                activeDateFilter={dateFilter}
+                isLight={isLight}
               />
             </div>
           </main>
@@ -1950,7 +1954,7 @@ export default function App() {
                         ? 'text-cyan-800 bg-cyan-50 border-cyan-200 font-semibold'
                         : 'text-cyan-300 bg-cyan-500/10 border-cyan-500/20'
                     }`}>
-                      {activeTaskName ? `Active: ${activeTaskName}` : 'Enter Task'}
+                      {activeTaskName ? `Active: ${activeTaskName}` : 'TASK'}
                     </span>
                   </div>
 
@@ -2279,6 +2283,8 @@ export default function App() {
                     isTimerRunning={isRunning && mode === 'focus'}
                     onSimulateBlock={handleSimulateBlock}
                     distractionCount={distractionCount}
+                    distractionLog={distractionLog}
+                    onClearDistractionLog={handleClearDistractionLog}
                     isLight={isLight}
                   />
                 </div>
@@ -2344,6 +2350,8 @@ export default function App() {
                 isTimerRunning={isRunning && mode === 'focus'}
                 onSimulateBlock={handleSimulateBlock}
                 distractionCount={distractionCount}
+                distractionLog={distractionLog}
+                onClearDistractionLog={handleClearDistractionLog}
                 isLight={isLight}
               />
             </div>
@@ -2394,6 +2402,8 @@ export default function App() {
         sessions={sessions}
         goalMinutes={settings.dailyGoalMinutes}
         distractionCount={distractionCount}
+        blockedSites={blockedSites}
+        distractionLog={distractionLog}
         isLight={isLight}
       />
 

@@ -10,6 +10,21 @@ export interface StudySession {
   timestamp: string;       // ISO string
   date: string;            // YYYY-MM-DD
   hour: number;            // 0-23
+  energy_before?: number;  // 1-5 logged at session start
+  energy_after?: number;   // 1-5 logged at session end
+  break_scheduled?: boolean;
+  break_taken?: boolean;
+  status?: 'completed' | 'interrupted' | 'abandoned';
+  category?: string;
+  pause_count?: number;
+}
+
+export interface BreakRecord {
+  break_id: string;
+  session_id: string;
+  date: string;
+  scheduled: boolean;
+  taken: boolean;
 }
 
 export interface BlockedWebsite {
@@ -159,3 +174,11 @@ export interface FocusProtocol {
   description: string;
   recommendedFor: string;
 }
+
+export interface DistractionLogItem {
+  id: string;
+  domain: string;
+  timestamp: string;
+  action: string;
+}
+

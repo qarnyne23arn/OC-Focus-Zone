@@ -166,7 +166,7 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
           isLight ? 'text-slate-900 font-bold' : 'text-slate-300'
         }`}>
           <div className="flex items-center gap-2">
-            <span>Study Tasks</span>
+            <span>Focus Tasks</span>
             <span className={`text-[11px] font-normal ${isLight ? 'text-slate-600 font-semibold' : 'text-slate-500'}`}>
               ({tasks.filter((t) => t.completed).length}/{tasks.length} done)
             </span>
@@ -295,7 +295,7 @@ export const TaskManager: React.FC<TaskManagerProps> = ({
         <form onSubmit={handleCreateTask} className="flex flex-col sm:flex-row gap-2 pt-1">
           <input
             type="text"
-            placeholder="Add new study assignment or exam prep..."
+            placeholder="Add new task, writing, or coding goal..."
             value={newTaskInput}
             onChange={(e) => setNewTaskInput(e.target.value)}
             className={`flex-1 px-3 py-2 rounded-xl text-xs focus:outline-none focus:border-cyan-500 ${

@@ -216,6 +216,25 @@ const STORAGE_KEY_OFFLINE_QUEUE = 'focus_time_offline_queue_v1';
 const STORAGE_KEY_TASKS = 'focus_time_tasks_v1';
 const STORAGE_KEY_ACTIVE_TASK = 'focus_time_active_task_name_v2';
 const STORAGE_KEY_MINI_DOCK_HIDDEN = 'focus_time_mini_dock_hidden_v2';
+const STORAGE_KEY_DISTRACTION_LOG = 'focus_time_distraction_log_v1';
+
+export function loadLocalDistractionLog(): import('../types').DistractionLogItem[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DISTRACTION_LOG);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveLocalDistractionLog(log: import('../types').DistractionLogItem[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_DISTRACTION_LOG, JSON.stringify(log));
+  } catch {
+    // Ignore
+  }
+}
+
 
 export function loadLocalFloatingDockHidden(): boolean {
   try {

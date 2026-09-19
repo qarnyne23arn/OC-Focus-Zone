@@ -40,7 +40,7 @@ export const GoalProgressBar: React.FC<GoalProgressBarProps> = ({
           title="Click to view Goals & Milestones Tracker"
         >
           <Target className={`w-3.5 h-3.5 ${isLight ? 'text-cyan-600' : 'text-cyan-400'}`} />
-          <span>Daily Study Goal</span>
+          <span>Daily Focus Goal</span>
           {activeGoalsCount !== undefined && activeGoalsCount > 0 && (
             <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-mono font-semibold flex items-center gap-1 shrink-0 ${
               isLight ? 'bg-cyan-100 text-cyan-800' : 'bg-cyan-500/20 text-cyan-300'

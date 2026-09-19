@@ -313,7 +313,7 @@ export const CircularTimer: React.FC<CircularTimerProps> = ({
                   }`} 
                 />
                 <span className={`font-semibold ${colors.textColor}`}>
-                  {isRunning ? (mode === 'focus' ? 'Studying...' : 'On Break') : 'Paused (Click to Start)'}
+                  {isRunning ? (mode === 'focus' ? 'In Progress' : 'On Break') : 'Paused (Click to Start)'}
                 </span>
               </div>
 

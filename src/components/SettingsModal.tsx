@@ -20,6 +20,7 @@ import {
 import { AppSettings, ThemeMode, UserProfile } from '../types';
 import { apiChangePassword } from '../utils/auth';
 import { loadLocalSessions, loadLocalTasks } from '../utils/storage';
+import { calculateDailyReport, generateEnergyBreaksCSV } from '../utils/reports';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -107,10 +108,21 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const handleExportJSON = () => {
+    const sessions = loadLocalSessions();
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 10);
+    const dailyRep = calculateDailyReport(sessions, dateStr, 0);
     const data = {
-      sessions: loadLocalSessions(),
+      sessions,
       tasks: loadLocalTasks(),
       settings,
+      energy: {
+        shift_start: dailyRep.energy_shift.start,
+        shift_end: dailyRep.energy_shift.end,
+        timeline: dailyRep.energy_timeline,
+      },
+      breaks: dailyRep.break_adherence,
+      pattern_note: dailyRep.pattern_note,
       exportDate: new Date().toISOString(),
     };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -128,22 +140,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       alert('No study sessions found to export.');
       return;
     }
-    const headers = ['ID', 'Date', 'Subject', 'Mode', 'PlannedMinutes', 'ActualMinutes', 'Completed'];
-    const rows = sessions.map(s => [
-      s.id,
-      s.date,
-      `"${s.subject || 'General'}"`,
-      s.mode,
-      s.durationMinutes,
-      s.actualMinutes,
-      s.completed ? 'Yes' : 'No',
-    ]);
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+    const csvContent = generateEnergyBreaksCSV(sessions);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `oc-focus-study-sessions-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.download = `energy_breaks_log-${new Date().toISOString().slice(0, 10)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
