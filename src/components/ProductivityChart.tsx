@@ -233,9 +233,6 @@ export const ProductivityChart: React.FC<ProductivityChartProps> = ({
         <span className="truncate max-w-[280px] font-medium">
           Subjects: {activeItem.subjects.join(', ')}
         </span>
-        <span className={`font-mono text-[10px] ${isLight ? 'text-cyan-700 font-semibold' : 'text-cyan-400'}`}>
-          Swipe or scroll horizontally to view all 24 hours →
-        </span>
       </div>
     </div>
   );

@@ -7,14 +7,15 @@ export async function handleExportReport(
   reportType = 'daily',
   dateLabel = new Date().toISOString().slice(0, 10)
 ) {
-  console.log("Export Report clicked, ref:", reportElementRef.current);
-  if (!reportElementRef.current) {
+  const hasRef = !!reportElementRef.current;
+  console.log("Export Report clicked. Ref present:", hasRef);
+  if (!hasRef) {
     console.error("Export aborted: report container ref is null");
+    alert("Export failed: report content not found. Please try again.");
     return;
   }
 
   try {
-    // Ensure content is fully painted before capture
     await new Promise((resolve) => requestAnimationFrame(resolve));
 
     const canvas = await html2canvas(reportElementRef.current, {
@@ -25,12 +26,12 @@ export async function handleExportReport(
       windowHeight: reportElementRef.current.scrollHeight
     });
 
-    console.log("Canvas captured:", canvas.width, "x", canvas.height);
+    console.log("Canvas captured, width:", canvas.width, "height:", canvas.height);
     const imgData = canvas.toDataURL("image/png");
     console.log("Image data length:", imgData.length);
 
     if (imgData.length < 5000) {
-      console.error("Captured canvas looks blank — check container visibility/height before capture");
+      console.error("Captured canvas appears blank");
       return;
     }
 
@@ -41,13 +42,12 @@ export async function handleExportReport(
       unit: "pt",
       format: [pdfWidth, pdfHeight]
     });
-
     pdf.setFillColor(15, 17, 21);
     pdf.rect(0, 0, pdfWidth, pdfHeight, "F");
     pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
     pdf.save(`focus-sanctuary-report-${reportType}-${dateLabel}.pdf`);
-    console.log("Export Report: PDF saved");
-  } catch (err) {
-    console.error("Export Report failed:", err);
+    console.log("Export Report: PDF save triggered");
+  } catch (err: any) {
+    console.error("Export Report failed:", err?.message || err);
   }
 }
