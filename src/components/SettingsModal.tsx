@@ -53,6 +53,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenAbout,
 }) => {
   const [activeTab, setActiveTab] = useState<'account' | 'appearance' | 'sync' | 'timer' | 'export' | 'about'>('account');
+  const modalRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    if (modalRef.current) {
+      modalRef.current.scrollTop = 0;
+    }
+  }, [activeTab, isOpen]);
 
   // Change Password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -159,11 +166,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   return (
     <div
       id="settings-modal-backdrop"
-      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto"
+      ref={modalRef}
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-start sm:items-center justify-center p-2 sm:p-4 pt-[max(1rem,env(safe-area-inset-top))] overflow-y-auto"
     >
       <div
         id="settings-modal-container"
-        className={`relative w-full max-w-2xl rounded-3xl border shadow-[0_25px_70px_rgba(0,0,0,0.85)] p-6 sm:p-8 overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${
+        className={`relative w-full max-w-2xl max-h-[92dvh] sm:max-h-[90vh] flex flex-col rounded-3xl border shadow-[0_25px_70px_rgba(0,0,0,0.85)] p-4 sm:p-8 overflow-hidden animate-in fade-in zoom-in-95 duration-200 ${
           isLight
             ? 'bg-[#edf5f7] border-slate-300 text-slate-900'
             : 'bg-[#061022] border-sky-500/20 text-slate-100'
@@ -172,136 +180,141 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         {/* Ambient Top Glow */}
         <div className="absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-48 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-        {/* Modal Header */}
-        <div className={`flex items-center justify-between pb-4 border-b mb-6 ${
-          isLight ? 'border-slate-300' : 'border-slate-800/80'
+        {/* Pinned Sticky Header & Tabs */}
+        <div className={`sticky top-0 z-30 pb-3 pt-1 backdrop-blur-xl ${
+          isLight ? 'bg-[#edf5f7]/95' : 'bg-[#061022]/95'
         }`}>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-black border border-cyan-500/40 p-1 flex items-center justify-center overflow-hidden">
-              <img
-                src="/sandclock.svg"
-                alt="OC Logo"
-                referrerPolicy="no-referrer"
-                className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(6,182,212,0.7)]"
-              />
+          {/* Modal Header */}
+          <div className={`flex items-center justify-between pb-4 border-b mb-4 ${
+            isLight ? 'border-slate-300' : 'border-slate-800/80'
+          }`}>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-black border border-cyan-500/40 p-1 flex items-center justify-center overflow-hidden shrink-0">
+                <img
+                  src="/sandclock.svg"
+                  alt="OC Logo"
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(6,182,212,0.7)]"
+                />
+              </div>
+              <div>
+                <h2 className={`text-lg sm:text-xl font-black tracking-wider font-['Plus_Jakarta_Sans'] ${
+                  isLight ? 'text-slate-900' : 'text-white'
+                }`}>
+                  System Settings
+                </h2>
+                <p className={`text-[11px] sm:text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                  Account credentials, day/night mode, and multi-device auto-sync
+                </p>
+              </div>
             </div>
-            <div>
-              <h2 className={`text-xl font-black tracking-wider font-['Plus_Jakarta_Sans'] ${
-                isLight ? 'text-slate-900' : 'text-white'
-              }`}>
-                System Settings
-              </h2>
-              <p className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                Account credentials, day/night mode, and multi-device auto-sync
-              </p>
-            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className={`p-2 rounded-full transition cursor-pointer shrink-0 ${
+                isLight
+                  ? 'text-slate-600 hover:text-slate-900 hover:bg-[#dce9ed]'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+              }`}
+              title="Close settings"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className={`p-2 rounded-full transition cursor-pointer ${
-              isLight
-                ? 'text-slate-600 hover:text-slate-900 hover:bg-[#dce9ed]'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-            }`}
-            title="Close settings"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          {/* Settings Navigation Tabs */}
+          <div className={`grid grid-cols-3 sm:grid-cols-6 gap-1.5 p-1.5 rounded-2xl border ${
+            isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/90 border-slate-800'
+          }`}>
+            <button
+              type="button"
+              onClick={() => setActiveTab('account')}
+              className={`py-2 px-1 sm:px-2 text-[10px] sm:text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
+                activeTab === 'account'
+                  ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
+                  : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <User className="w-3.5 h-3.5 shrink-0" />
+              <span>Account</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('appearance')}
+              className={`py-2 px-1 sm:px-2 text-[10px] sm:text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
+                activeTab === 'appearance'
+                  ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
+                  : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Sun className="w-3.5 h-3.5 shrink-0" />
+              <span>Theme</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('sync')}
+              className={`py-2 px-1 sm:px-2 text-[10px] sm:text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
+                activeTab === 'sync'
+                  ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
+                  : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <RefreshCw className="w-3.5 h-3.5 shrink-0" />
+              <span>Sync</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('timer')}
+              className={`py-2 px-1 sm:px-2 text-[10px] sm:text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
+                activeTab === 'timer'
+                  ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
+                  : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Sliders className="w-3.5 h-3.5 shrink-0" />
+              <span>Timer</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('export')}
+              className={`py-2 px-1 sm:px-2 text-[10px] sm:text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
+                activeTab === 'export'
+                  ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
+                  : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <Download className="w-3.5 h-3.5 shrink-0" />
+              <span>Export</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                if (onOpenAbout) {
+                  onClose();
+                  onOpenAbout();
+                } else {
+                  setActiveTab('about');
+                }
+              }}
+              className={`py-2 px-1 sm:px-2 text-[10px] sm:text-xs font-bold rounded-xl transition flex items-center justify-center gap-1 cursor-pointer whitespace-nowrap ${
+                activeTab === 'about'
+                  ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
+                  : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+              }`}
+            >
+              <BookOpen className="w-3.5 h-3.5 shrink-0" />
+              <span>About</span>
+            </button>
+          </div>
         </div>
 
-        {/* Settings Navigation Tabs */}
-        <div className={`grid grid-cols-6 p-1 rounded-2xl border mb-6 ${
-          isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/90 border-slate-800'
-        }`}>
-          <button
-            type="button"
-            onClick={() => setActiveTab('account')}
-            className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === 'account'
-                ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
-                : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <User className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Account</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('appearance')}
-            className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === 'appearance'
-                ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
-                : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Sun className="w-3.5 h-3.5" />
-            <span>Day / Night</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('sync')}
-            className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === 'sync'
-                ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
-                : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            <span>Auto Sync</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('timer')}
-            className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === 'timer'
-                ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
-                : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Sliders className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Timer</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveTab('export')}
-            className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === 'export'
-                ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
-                : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Export</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              if (onOpenAbout) {
-                onClose();
-                onOpenAbout();
-              } else {
-                setActiveTab('about');
-              }
-            }}
-            className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              activeTab === 'about'
-                ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
-                : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>About</span>
-          </button>
-        </div>
-
-        {/* Tab Content */}
-        <div className="space-y-6">
+        {/* Scrollable Tab Content Body */}
+        <div className="overflow-y-auto flex-1 pr-1 space-y-6 mt-4">
           {/* TAB 1: ACCOUNT & CHANGE PASSWORD */}
           {activeTab === 'account' && (
             <div className="space-y-6 animate-in fade-in duration-200">
@@ -568,7 +581,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <div className={`p-5 rounded-2xl border space-y-4 ${
                 isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/60 border-slate-800'
               }`}>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
                   <div className="flex items-center gap-2.5">
                     <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
@@ -580,13 +593,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </span>
                 </div>
 
-                <div className={`grid grid-cols-2 gap-3 pt-2 border-t ${
+                <div className={`grid grid-cols-1 gap-2.5 pt-2 border-t ${
                   isLight ? 'border-slate-300' : 'border-slate-800'
                 }`}>
                   <div className={`p-3 rounded-xl border flex items-center gap-3 ${
                     isLight ? 'bg-[#edf5f7] border-slate-300' : 'bg-slate-950/60 border-slate-800'
                   }`}>
-                    <Laptop className="w-5 h-5 text-sky-600 dark:text-sky-500" />
+                    <Laptop className="w-5 h-5 text-sky-600 dark:text-sky-500 shrink-0" />
                     <div>
                       <div className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>Primary Computer</div>
                       <div className="text-[11px] text-emerald-600 dark:text-emerald-500 font-bold">Connected & Synced</div>
@@ -595,7 +608,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <div className={`p-3 rounded-xl border flex items-center gap-3 ${
                     isLight ? 'bg-[#edf5f7] border-slate-300' : 'bg-slate-950/60 border-slate-800'
                   }`}>
-                    <Smartphone className="w-5 h-5 text-cyan-600 dark:text-cyan-500" />
+                    <Smartphone className="w-5 h-5 text-cyan-600 dark:text-cyan-500 shrink-0" />
                     <div>
                       <div className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>Mobile / Tablet</div>
                       <div className={`text-[11px] ${isLight ? 'text-slate-600 font-medium' : 'text-slate-400'}`}>Auto-sync on login</div>
@@ -603,12 +616,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-2">
                   <button
                     type="button"
                     disabled={isSyncing}
                     onClick={onTriggerSync}
-                    className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-md shadow-cyan-500/20 transition cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs shadow-md shadow-cyan-500/20 transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-50"
                   >
                     <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
                     {isSyncing ? 'Syncing...' : 'Sync Workspace Now'}
@@ -621,7 +634,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         onClose();
                         onOpenAuth();
                       }}
-                      className={`text-xs hover:underline font-bold cursor-pointer ${
+                      className={`text-xs hover:underline font-bold cursor-pointer text-center sm:text-right ${
                         isLight ? 'text-cyan-800' : 'text-cyan-400'
                       }`}
                     >
@@ -760,7 +773,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <div className={`p-5 rounded-2xl border flex flex-col justify-between gap-4 ${
                   isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/70 border-slate-800'
                 }`}>
@@ -778,10 +791,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <button
                     type="button"
                     onClick={handleExportCSV}
-                    className="w-full py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+                    className="w-full py-3 sm:py-2.5 px-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
                   >
-                    <Download className="w-4 h-4" />
-                    Download CSV Report
+                    <Download className="w-4 h-4 shrink-0" />
+                    <span>Download CSV Report</span>
                   </button>
                 </div>
 
@@ -790,7 +803,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 }`}>
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <FileCode className="w-5 h-5 text-cyan-500" />
+                      <FileCode className="w-5 h-5 text-cyan-500 shrink-0" />
                       <h4 className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         Complete Backup (JSON)
                       </h4>
@@ -802,10 +815,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   <button
                     type="button"
                     onClick={handleExportJSON}
-                    className="w-full py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
+                    className="w-full py-3 sm:py-2.5 px-4 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-md transition cursor-pointer"
                   >
-                    <Download className="w-4 h-4" />
-                    Download JSON Backup
+                    <Download className="w-4 h-4 shrink-0" />
+                    <span>Download JSON Backup</span>
                   </button>
                 </div>
               </div>

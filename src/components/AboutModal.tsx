@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, BookOpen, Send, CheckCircle2, ShieldCheck, FileText, Mail, ArrowRight } from 'lucide-react';
+import { X, BookOpen, Send, CheckCircle2, ShieldCheck, FileText, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
 
 interface AboutModalProps {
   isOpen: boolean;
@@ -17,8 +17,13 @@ export const AboutModal: React.FC<AboutModalProps> = ({
   const [contactMessage, setContactMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [sentSuccess, setSentSuccess] = useState(false);
+  const aboutRef = React.useRef<HTMLDivElement>(null);
 
-  if (!isOpen) return null;
+  React.useEffect(() => {
+    if (aboutRef.current) {
+      aboutRef.current.scrollTop = 0;
+    }
+  }, [isOpen]);
 
   const handleContactSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,12 +55,24 @@ export const AboutModal: React.FC<AboutModalProps> = ({
     }
   };
 
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 z-50 bg-[#0a0e1a]/90 backdrop-blur-xl flex flex-col overflow-y-auto">
+    <div ref={aboutRef} className="fixed inset-0 z-50 bg-[#0a0e1a]/90 backdrop-blur-xl flex flex-col overflow-y-auto">
       {/* 1. NAV */}
-      <header className="sticky top-0 z-40 bg-[#0a0e1a]/80 backdrop-blur-md border-b border-white/10 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-black border border-[#22d3ee]/40 p-1 flex items-center justify-center overflow-hidden shadow-[0_0_12px_rgba(34,211,238,0.25)]">
+      <header className="sticky top-0 z-40 bg-[#0a0e1a]/80 backdrop-blur-md border-b border-white/10 px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white text-xs font-bold transition cursor-pointer border border-white/10 mr-1 sm:mr-2 shrink-0"
+            title="Go back to app"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Back</span>
+          </button>
+
+          <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-black border border-[#22d3ee]/40 p-1 flex items-center justify-center overflow-hidden shadow-[0_0_12px_rgba(34,211,238,0.25)] shrink-0">
             <img
               src="/sandclock.svg"
               alt="OC Logo"
@@ -63,44 +80,30 @@ export const AboutModal: React.FC<AboutModalProps> = ({
               className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(34,211,238,0.7)]"
             />
           </div>
-          <span className="font-['Plus_Jakarta_Sans'] font-black text-white text-base tracking-wider">
+          <span className="font-['Plus_Jakarta_Sans'] font-black text-white text-xs sm:text-base tracking-wider truncate max-w-[120px] sm:max-w-none">
             OC Focus Sanctuary
           </span>
         </div>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-3 sm:gap-6">
           <button
             type="button"
             onClick={() => scrollToSection('about-story')}
-            className="text-xs font-semibold text-[#22d3ee] cursor-pointer hover:underline"
+            className="text-xs font-semibold text-[#22d3ee] cursor-pointer hover:underline hidden sm:inline"
           >
             About
           </button>
           <button
             type="button"
             onClick={() => scrollToSection('contact-section')}
-            className="text-xs font-semibold text-[#94a3b8] hover:text-white cursor-pointer transition"
+            className="text-xs font-semibold text-[#94a3b8] hover:text-white cursor-pointer transition hidden sm:inline"
           >
             Contact
           </button>
           <button
             type="button"
-            onClick={() => scrollToSection('privacy')}
-            className="text-xs font-semibold text-[#94a3b8] hover:text-white cursor-pointer transition hidden sm:inline"
-          >
-            Privacy
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollToSection('terms')}
-            className="text-xs font-semibold text-[#94a3b8] hover:text-white cursor-pointer transition hidden sm:inline"
-          >
-            Terms
-          </button>
-          <button
-            type="button"
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-[#22d3ee] text-[#0a0e1a] font-bold text-xs shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:brightness-110 transition cursor-pointer flex items-center gap-1.5"
+            className="px-3 sm:px-4 py-2 rounded-xl bg-[#22d3ee] text-[#0a0e1a] font-bold text-xs shadow-[0_0_15px_rgba(34,211,238,0.3)] hover:brightness-110 transition cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
           >
             <span>Get Started</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -108,7 +111,7 @@ export const AboutModal: React.FC<AboutModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer"
+            className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition cursor-pointer shrink-0"
             title="Close"
           >
             <X className="w-5 h-5" />

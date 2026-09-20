@@ -39,7 +39,8 @@ import {
   LogOut as LogOutIcon,
   RefreshCw,
   Menu,
-  ChevronRight
+  ChevronRight,
+  Search
 } from 'lucide-react';
 import { 
   TimerMode, 
@@ -137,6 +138,7 @@ export default function App() {
   const [blockedSites, setBlockedSites] = useState<BlockedWebsite[]>(loadLocalBlockedSites);
   const [tasks, setTasks] = useState<TaskItem[]>(loadLocalTasks);
   const [syncCode, setSyncCode] = useState<string>(loadSyncCode);
+  const [searchQuery, setSearchQuery] = useState<string>('');
 
   // System Initiation Splash Screen state (shows user logo for ~1s on startup then enters main app)
   const [isInitiating, setIsInitiating] = useState<boolean>(true);
@@ -1358,6 +1360,8 @@ export default function App() {
             <Shield className="w-4 h-4 text-cyan-500" />
           </button>
 
+
+
           {/* Goals & Deadlines Tracker Button */}
           <button
             type="button"
@@ -1962,8 +1966,33 @@ export default function App() {
                     </span>
                   </div>
 
+                  {/* Search Task Bar */}
+                  <div className="relative mb-4">
+                    <Search className={`w-3.5 h-3.5 absolute left-3 top-3 ${isLight ? 'text-slate-400' : 'text-slate-500'}`} />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search task..."
+                      className={`w-full pl-9 pr-8 py-2 rounded-xl text-xs focus:outline-none focus:border-cyan-400 transition ${
+                        isLight
+                          ? 'bg-slate-100 border border-slate-300 text-slate-900 placeholder-slate-400'
+                          : 'bg-[#061022] border border-sky-500/20 text-white placeholder-slate-500'
+                      }`}
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer"
+                      >
+                        ×
+                      </button>
+                    )}
+                  </div>
+
                   <TaskManager
-                    tasks={tasks}
+                    tasks={tasks.filter(t => (t.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || (t.tags && t.tags.some(tag => (tag || '').toLowerCase().includes(searchQuery.toLowerCase()))))}
                     activeTaskName={activeTaskName}
                     onSelectActiveTask={(name) => {
                       setActiveTaskName(name);
