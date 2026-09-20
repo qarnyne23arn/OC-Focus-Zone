@@ -118,7 +118,7 @@ export interface SessionReflection {
   durationMinutes: number;
 }
 
-export type AmbientSoundMode = 'none' | 'alpha' | 'theta' | 'brown_noise' | 'rain' | 'custom_file' | 'custom_url';
+export type AmbientSoundMode = 'none' | 'alpha' | 'theta' | 'brown_noise' | 'rain' | 'custom_1' | 'custom_2' | 'custom_3' | 'custom_4' | 'custom_file' | 'custom_url';
 
 export interface CustomAudioConfig {
   sourceType: 'file' | 'url';

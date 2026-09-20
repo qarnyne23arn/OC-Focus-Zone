@@ -117,6 +117,8 @@ import { FocusProtocolsCard } from './components/FocusProtocolsCard';
 import { SystemInitiateSplash } from './components/SystemInitiateSplash';
 import { AuthModal } from './components/AuthModal';
 import { SettingsModal } from './components/SettingsModal';
+import { AboutModal } from './components/AboutModal';
+import { AmbientSoundModal } from './components/AmbientSoundModal';
 import { GoalsSection } from './components/GoalsSection';
 import { HabitHeatmap } from './components/HabitHeatmap';
 import { 
@@ -195,6 +197,8 @@ export default function App() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
   const [authModalInitialMode, setAuthModalInitialMode] = useState<'login' | 'signup'>('signup');
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState<boolean>(false);
+  const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+  const [isAmbientModalOpen, setIsAmbientModalOpen] = useState<boolean>(false);
   const [lastAccountSyncedAt, setLastAccountSyncedAt] = useState<string | null>(null);
   const [isAccountSyncing, setIsAccountSyncing] = useState<boolean>(false);
   const [savedSnapshot, setSavedSnapshot] = useState<SessionSnapshot | null>(loadSessionSnapshot);
@@ -2510,6 +2514,19 @@ export default function App() {
         lastSyncedAt={lastAccountSyncedAt}
         isSyncing={isAccountSyncing}
         onTriggerSync={handleTriggerAccountSync}
+        onOpenAbout={() => setIsAboutOpen(true)}
+      />
+
+      <AboutModal
+        isOpen={isAboutOpen}
+        onClose={() => setIsAboutOpen(false)}
+        isLight={isLight}
+      />
+
+      <AmbientSoundModal
+        isOpen={isAmbientModalOpen}
+        onClose={() => setIsAmbientModalOpen(false)}
+        isLight={isLight}
       />
 
       {/* Goals & Milestones Modal (Quick popup access when clock is expanded) */}

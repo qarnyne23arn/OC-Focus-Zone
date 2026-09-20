@@ -16,6 +16,7 @@ import {
   Download,
   FileSpreadsheet,
   FileCode,
+  BookOpen,
 } from 'lucide-react';
 import { AppSettings, ThemeMode, UserProfile } from '../types';
 import { apiChangePassword } from '../utils/auth';
@@ -34,6 +35,7 @@ interface SettingsModalProps {
   onTriggerSync: () => Promise<void>;
   lastSyncedAt: string | null;
   isSyncing: boolean;
+  onOpenAbout?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -48,8 +50,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onTriggerSync,
   lastSyncedAt,
   isSyncing,
+  onOpenAbout,
 }) => {
-  const [activeTab, setActiveTab] = useState<'account' | 'appearance' | 'sync' | 'timer' | 'export'>('account');
+  const [activeTab, setActiveTab] = useState<'account' | 'appearance' | 'sync' | 'timer' | 'export' | 'about'>('account');
 
   // Change Password state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -208,7 +211,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Settings Navigation Tabs */}
-        <div className={`grid grid-cols-5 p-1 rounded-2xl border mb-6 ${
+        <div className={`grid grid-cols-6 p-1 rounded-2xl border mb-6 ${
           isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/90 border-slate-800'
         }`}>
           <button
@@ -274,6 +277,26 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (onOpenAbout) {
+                onClose();
+                onOpenAbout();
+              } else {
+                setActiveTab('about');
+              }
+            }}
+            className={`py-2 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer ${
+              activeTab === 'about'
+                ? 'bg-cyan-500 text-slate-950 shadow-[0_0_12px_rgba(6,182,212,0.35)]'
+                : isLight ? 'text-slate-700 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>About</span>
           </button>
         </div>
 

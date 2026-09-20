@@ -10,7 +10,6 @@ import {
   CloudRain, 
   Radio, 
   Play, 
-  Pause,
   AlertCircle
 } from 'lucide-react';
 import { AmbientSoundMode } from '../types';
@@ -30,6 +29,13 @@ interface AmbientSoundPlayerProps {
   isLight?: boolean;
 }
 
+interface CustomSlotData {
+  sourceType: 'file' | 'url';
+  url: string;
+  fileName: string;
+  blobUrl: string;
+}
+
 export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({ 
   isTimerRunning,
   compact = false,
@@ -38,12 +44,16 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
   const [mode, setMode] = useState<AmbientSoundMode>('none');
   const [volume, setVolume] = useState<number>(0.5);
   const [isMuted, setIsMuted] = useState<boolean>(false);
-  const [customSourceType, setCustomSourceType] = useState<'file' | 'url'>('url');
-  const [customUrl, setCustomUrl] = useState<string>('https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3');
-  const [customFileName, setCustomFileName] = useState<string>('');
-  const [customBlobUrl, setCustomBlobUrl] = useState<string>('');
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [activeCustomSlot, setActiveCustomSlot] = useState<1 | 2 | 3 | 4>(1);
 
+  const [customSlots, setCustomSlots] = useState<Record<1 | 2 | 3 | 4, CustomSlotData>>({
+    1: { sourceType: 'url', url: 'https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=lofi-study-112191.mp3', fileName: '', blobUrl: '' },
+    2: { sourceType: 'url', url: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=lofi-chill-105156.mp3', fileName: '', blobUrl: '' },
+    3: { sourceType: 'url', url: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_c8c8a73467.mp3?filename=ambient-piano-101157.mp3', fileName: '', blobUrl: '' },
+    4: { sourceType: 'url', url: 'https://cdn.pixabay.com/download/audio/2022/05/16/audio_db324b172a.mp3?filename=lofi-beat-110924.mp3', fileName: '', blobUrl: '' },
+  });
+
+  const [errorMessage, setErrorMessage] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Apply sound changes
@@ -58,32 +68,26 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
     try {
       setErrorMessage('');
       if (mode === 'alpha') {
-        playBinauralBeats(200, 10, effectiveVolume); // 10 Hz Alpha
+        playBinauralBeats(200, 10, effectiveVolume);
       } else if (mode === 'theta') {
-        playBinauralBeats(150, 6, effectiveVolume); // 6 Hz Theta
+        playBinauralBeats(150, 6, effectiveVolume);
       } else if (mode === 'brown_noise') {
         playBrownNoise(effectiveVolume);
       } else if (mode === 'rain') {
         playRainSound(effectiveVolume);
-      } else if (mode === 'custom_file') {
-        if (customBlobUrl) {
-          playCustomAudio(customBlobUrl, effectiveVolume);
-        }
-      } else if (mode === 'custom_url') {
-        if (customUrl) {
-          playCustomAudio(customUrl, effectiveVolume);
+      } else if (mode === 'custom_1' || mode === 'custom_2' || mode === 'custom_3' || mode === 'custom_4' || mode === 'custom_file' || mode === 'custom_url') {
+        const slotNum = mode === 'custom_1' ? 1 : mode === 'custom_2' ? 2 : mode === 'custom_3' ? 3 : mode === 'custom_4' ? 4 : activeCustomSlot;
+        const slot = customSlots[slotNum as 1 | 2 | 3 | 4];
+        const activeSrc = slot.blobUrl || slot.url;
+        if (activeSrc) {
+          playCustomAudio(activeSrc, effectiveVolume);
         }
       }
     } catch {
       setErrorMessage('Audio playback could not be started. Click anywhere to enable browser audio.');
     }
+  }, [mode, isMuted, customSlots, activeCustomSlot]);
 
-    return () => {
-      // Don't stop abruptly on minor re-renders, handled in mode switch
-    };
-  }, [mode, isMuted, customBlobUrl, customUrl]);
-
-  // Handle volume changes
   const handleVolumeChange = (newVol: number) => {
     setVolume(newVol);
     if (isMuted) setIsMuted(false);
@@ -94,24 +98,48 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (customBlobUrl) {
-      URL.revokeObjectURL(customBlobUrl);
+    const currentSlotData = customSlots[activeCustomSlot];
+    if (currentSlotData.blobUrl) {
+      URL.revokeObjectURL(currentSlotData.blobUrl);
     }
 
     const objUrl = URL.createObjectURL(file);
-    setCustomBlobUrl(objUrl);
-    setCustomFileName(file.name);
-    setMode('custom_file');
+    setCustomSlots(prev => ({
+      ...prev,
+      [activeCustomSlot]: {
+        ...prev[activeCustomSlot],
+        sourceType: 'file',
+        blobUrl: objUrl,
+        fileName: file.name
+      }
+    }));
+    setMode(`custom_${activeCustomSlot}` as AmbientSoundMode);
   };
 
-  const handleLoadCustomUrl = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customUrl.trim()) return;
-    setMode('custom_url');
-    playCustomAudio(customUrl.trim(), volume);
+  const handleUrlChange = (newUrl: string) => {
+    setCustomSlots(prev => ({
+      ...prev,
+      [activeCustomSlot]: {
+        ...prev[activeCustomSlot],
+        url: newUrl
+      }
+    }));
+  };
+
+  const handlePlaySlot = (slotNum: 1 | 2 | 3 | 4, e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setActiveCustomSlot(slotNum);
+    const modeKey = `custom_${slotNum}` as AmbientSoundMode;
+    setMode(modeKey);
+    const slot = customSlots[slotNum];
+    const src = slot.blobUrl || slot.url;
+    if (src) {
+      playCustomAudio(src, isMuted ? 0 : volume);
+    }
   };
 
   const isAudioActive = mode !== 'none' && !isMuted;
+  const currentSlotData = customSlots[activeCustomSlot];
 
   return (
     <div className={`w-full space-y-3.5 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
@@ -143,7 +171,7 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
                 <span className={`text-[10px] px-2 py-0.2 rounded-full font-mono font-medium ${
                   isLight ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' : 'bg-cyan-500/20 text-cyan-300'
                 }`}>
-                  {mode.replace('_', ' ').toUpperCase()}
+                  {mode.startsWith('custom_') ? `CUSTOM MUSIC ${mode.replace('custom_', '')}` : mode.replace('_', ' ').toUpperCase()}
                 </span>
               ) : (
                 <span className={`text-[10px] px-2 py-0.2 rounded-full ${
@@ -154,12 +182,11 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
               )}
             </div>
             <div className={`text-[10px] font-mono ${isLight ? 'text-slate-600' : 'text-sky-200/60'}`}>
-              {isAudioActive ? 'Live frequency synthesis active' : 'Select a frequency or noise layer below'}
+              {isAudioActive ? 'Live frequency synthesis / custom stream active' : 'Select a frequency or custom music slot below'}
             </div>
           </div>
         </div>
 
-        {/* Live Soundwave Oscillating Bars */}
         <SoundwaveVisualizer
           isPlaying={isAudioActive}
           mode={mode}
@@ -169,7 +196,7 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
         />
       </div>
 
-      {/* Sound selector grid */}
+      {/* Sound selector grid (9 slots: 5 built-in + 4 custom music slots) */}
       <div className={`grid ${compact ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-3'} gap-2`}>
         {[
           { id: 'none', label: 'Off', icon: Headphones, desc: 'Silence' },
@@ -177,17 +204,22 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
           { id: 'theta', label: 'Theta (6 Hz)', icon: Radio, desc: 'Memory & Retention' },
           { id: 'brown_noise', label: 'Brown Noise', icon: Music, desc: 'Deep Study Rumble' },
           { id: 'rain', label: 'Gentle Rain', icon: CloudRain, desc: 'Calm Rainfall' },
-          { id: 'custom_url', label: 'Custom Music', icon: Upload, desc: 'Insert File or URL' },
+          { id: 'custom_1', label: 'Custom Music 1', icon: Upload, desc: 'Slot 1 Stream/File' },
+          { id: 'custom_2', label: 'Custom Music 2', icon: Upload, desc: 'Slot 2 Stream/File' },
+          { id: 'custom_3', label: 'Custom Music 3', icon: Upload, desc: 'Slot 3 Stream/File' },
+          { id: 'custom_4', label: 'Custom Music 4', icon: Upload, desc: 'Slot 4 Stream/File' },
         ].map((item) => {
-          const isSelected = mode === item.id || (item.id === 'custom_url' && (mode === 'custom_url' || mode === 'custom_file'));
+          const isSelected = mode === item.id;
           const Icon = item.icon;
           return (
             <button
               key={item.id}
               type="button"
               onClick={() => {
-                if (item.id === 'custom_url') {
-                  setMode(customBlobUrl ? 'custom_file' : 'custom_url');
+                if (item.id.startsWith('custom_')) {
+                  const sNum = parseInt(item.id.replace('custom_', '')) as 1 | 2 | 3 | 4;
+                  setActiveCustomSlot(sNum);
+                  setMode(item.id as AmbientSoundMode);
                 } else {
                   setMode(item.id as AmbientSoundMode);
                 }
@@ -270,36 +302,69 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
         </div>
       </div>
 
-      {/* Custom Music Inserter (File Upload & URL Stream) */}
-      <div className={`p-3.5 rounded-2xl border space-y-2.5 ${
+      {/* Custom Music Slots Manager */}
+      <div className={`p-3.5 rounded-2xl border space-y-3 ${
         isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#061022] border-sky-500/15'
       }`}>
         <div className="flex items-center justify-between">
           <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
             <Music className={`w-3.5 h-3.5 ${isLight ? 'text-cyan-700' : 'text-cyan-400'}`} />
-            Insert Custom Audio / Lo-Fi
+            Custom Music Slots (4 Available)
+          </span>
+
+          {/* Slot Tabs */}
+          <div className={`flex items-center gap-1 p-0.5 rounded-lg text-[10px] ${
+            isLight ? 'bg-slate-200' : 'bg-slate-800'
+          }`}>
+            {([1, 2, 3, 4] as const).map((sNum) => (
+              <button
+                key={sNum}
+                type="button"
+                onClick={() => setActiveCustomSlot(sNum)}
+                className={`px-2 py-0.5 rounded font-bold cursor-pointer transition ${
+                  activeCustomSlot === sNum
+                    ? 'bg-cyan-500 text-slate-950 shadow-sm'
+                    : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                Slot {sNum}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Source Type Selector for Active Slot */}
+        <div className="flex items-center justify-between pt-1">
+          <span className={`text-[11px] font-medium ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+            Configuring <strong className={isLight ? 'text-slate-900' : 'text-cyan-300'}>Slot {activeCustomSlot}</strong>
           </span>
           <div className={`flex items-center gap-1 p-0.5 rounded-lg text-[10px] ${
             isLight ? 'bg-slate-200' : 'bg-slate-800'
           }`}>
             <button
               type="button"
-              onClick={() => setCustomSourceType('url')}
+              onClick={() => setCustomSlots(prev => ({
+                ...prev,
+                [activeCustomSlot]: { ...prev[activeCustomSlot], sourceType: 'url' }
+              }))}
               className={`px-2 py-0.5 rounded font-bold cursor-pointer transition ${
-                customSourceType === 'url'
+                currentSlotData.sourceType === 'url'
                   ? 'bg-cyan-500 text-slate-950'
-                  : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400'
+                  : isLight ? 'text-slate-600' : 'text-slate-400'
               }`}
             >
               Stream URL
             </button>
             <button
               type="button"
-              onClick={() => setCustomSourceType('file')}
+              onClick={() => setCustomSlots(prev => ({
+                ...prev,
+                [activeCustomSlot]: { ...prev[activeCustomSlot], sourceType: 'file' }
+              }))}
               className={`px-2 py-0.5 rounded font-bold cursor-pointer transition ${
-                customSourceType === 'file'
+                currentSlotData.sourceType === 'file'
                   ? 'bg-cyan-500 text-slate-950'
-                  : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400'
+                  : isLight ? 'text-slate-600' : 'text-slate-400'
               }`}
             >
               Upload MP3
@@ -307,7 +372,7 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
           </div>
         </div>
 
-        {customSourceType === 'file' ? (
+        {currentSlotData.sourceType === 'file' ? (
           <div>
             <input
               type="file"
@@ -326,21 +391,21 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
             >
               <Upload className={`w-5 h-5 mx-auto mb-1 ${isLight ? 'text-cyan-600' : 'text-cyan-400'}`} />
               <div className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                {customFileName ? customFileName : 'Click to select audio file from your device'}
+                {currentSlotData.fileName ? currentSlotData.fileName : `Click to select audio file for Slot ${activeCustomSlot}`}
               </div>
               <div className={`text-[10px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                Supports MP3, WAV, AAC, OGG (private local audio loop)
+                Supports MP3, WAV, AAC, OGG
               </div>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleLoadCustomUrl} className="flex gap-2">
+          <form onSubmit={(e) => handlePlaySlot(activeCustomSlot, e)} className="flex gap-2">
             <div className="relative flex-1">
               <Link className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5" />
               <input
                 type="text"
-                value={customUrl}
-                onChange={(e) => setCustomUrl(e.target.value)}
+                value={currentSlotData.url}
+                onChange={(e) => handleUrlChange(e.target.value)}
                 placeholder="https://example.com/stream.mp3 or Lo-Fi stream"
                 className={`w-full pl-8 pr-3 py-2 rounded-xl text-xs focus:outline-none focus:border-cyan-400 ${
                   isLight
@@ -354,7 +419,7 @@ export const AmbientSoundPlayer: React.FC<AmbientSoundPlayerProps> = ({
               className="px-3 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center gap-1 transition cursor-pointer shadow-sm"
             >
               <Play className="w-3 h-3 fill-slate-950" />
-              Play
+              Play Slot {activeCustomSlot}
             </button>
           </form>
         )}
