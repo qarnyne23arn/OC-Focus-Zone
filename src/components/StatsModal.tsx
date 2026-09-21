@@ -35,26 +35,31 @@ export const StatsModal: React.FC<StatsModalProps> = ({
   const month = now.getMonth();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#0f1115] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-black/70 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-[#0f1115] border border-white/10 rounded-2xl w-full max-w-4xl max-h-[95vh] sm:max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         {/* Modal Header */}
         <div className="p-4 border-b border-white/15 flex items-center justify-between shrink-0 bg-[#1a1d24]">
-          <div className="flex items-center gap-2 text-white font-bold">
-            <BarChart3 className="w-5 h-5 text-[#6b9b37]" />
-            <span>Match Report & Season Review</span>
+          <div className="flex items-center gap-2 text-white font-bold text-sm sm:text-base">
+            <BarChart3 className="w-5 h-5 text-[#6b9b37] shrink-0" />
+            <span className="truncate">Match Report & Season Review</span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition cursor-pointer"
+            className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition cursor-pointer shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
+        {/* Mobile Swipe Hint */}
+        <div className="bg-cyan-950/40 border-b border-cyan-500/20 px-4 py-1.5 text-[11px] text-cyan-300 text-center sm:hidden flex items-center justify-center gap-1.5">
+          <span>💡 Tip: Swipe horizontally or pinch to view the full report document</span>
+        </div>
+
         {/* Modal Body / Scrollable Preview */}
-        <div className="flex-1 overflow-y-auto p-6 flex justify-center bg-[#0b0d10]">
-          <div className="shadow-2xl">
+        <div className="flex-1 overflow-y-auto overflow-x-auto p-3 sm:p-6 flex justify-start sm:justify-center bg-[#0b0d10]">
+          <div className="shadow-2xl min-w-[760px] sm:min-w-0">
             <UnifiedReportDocument
               ref={reportRef}
               sessions={sessions}
