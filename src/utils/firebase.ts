@@ -1,17 +1,19 @@
 /// <reference types="vite/client" />
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getFirestore } from 'firebase/firestore';
+import firebaseConfigJson from '../../firebase-applet-config.json';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAFvhYYqf0ZpeGraBaxTaZsnY3ora0CD7s",
-  authDomain: "oc-focus-zone.firebaseapp.com",
-  projectId: "oc-focus-zone",
-  storageBucket: "oc-focus-zone.firebasestorage.app",
-  messagingSenderId: "298545778088",
-  appId: "1:298545778088:web:1386482d90348615ba619d",
-  measurementId: "G-QFNLES87PH"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || firebaseConfigJson.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || firebaseConfigJson.authDomain,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || firebaseConfigJson.projectId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || firebaseConfigJson.storageBucket,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfigJson.messagingSenderId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || firebaseConfigJson.appId,
 };
 
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 export const auth = getAuth(app);
+export const db = getFirestore(app, firebaseConfigJson.firestoreDatabaseId || '(default)');
 export const googleProvider = new GoogleAuthProvider();
