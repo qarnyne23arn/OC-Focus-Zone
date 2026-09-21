@@ -231,25 +231,24 @@ app.post("/api/sync/:syncCode", (req, res) => {
   });
 });
 
-// Vite middleware setup
-async function startServer() {
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
+// Vite middleware setup & immediate server start
+if (process.env.NODE_ENV !== "production") {
+  createViteServer({
+    server: { middlewareMode: true },
+    appType: "spa",
+  }).then((vite) => {
     app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*", (_req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
-  }
-
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Focus Time server running on http://0.0.0.0:${PORT}`);
+  }).catch((err) => {
+    console.error("Vite server creation failed:", err);
+  });
+} else {
+  const distPath = path.join(process.cwd(), "dist");
+  app.use(express.static(distPath));
+  app.get("*", (_req, res) => {
+    res.sendFile(path.join(distPath, "index.html"));
   });
 }
 
-startServer();
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Focus Time server running on http://0.0.0.0:${PORT}`);
+});
