@@ -1,88 +1,187 @@
-import { auth } from './firebase';
-import { 
-  updatePassword, 
-  reauthenticateWithCredential, 
-  EmailAuthProvider 
-} from 'firebase/auth';
+import { UserProfile } from '../types';
 
-// Storage helpers expected by App.tsx
-export function loadStoredAuth(): any {
+// Storage keys
+const AUTH_KEY = 'oc_auth_data';
+const GUEST_KEY = 'oc_guest_dismissed';
+const SYNC_KEY = 'oc_synced_user_data';
+const LOCAL_USERS_KEY = 'oc_local_registered_users';
+
+interface StoredAuth {
+  user: UserProfile;
+  token: string;
+}
+
+// ----------------------------------------------------
+// Storage & Session Helpers (Required by App.tsx & AuthModal.tsx)
+// ----------------------------------------------------
+
+export function loadStoredAuth(): StoredAuth | null {
   try {
-    const raw = localStorage.getItem('oc_auth_data');
+    const raw = localStorage.getItem(AUTH_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch (e) {
-    console.error('Error loading stored auth:', e);
+    console.error('Failed to load stored auth:', e);
     return null;
   }
 }
 
-export function saveStoredAuth(data: any): void {
+export function saveStoredAuth(user: UserProfile, token: string): void {
   try {
-    localStorage.setItem('oc_auth_data', JSON.stringify(data));
+    localStorage.setItem(AUTH_KEY, JSON.stringify({ user, token }));
   } catch (e) {
-    console.error('Error saving stored auth:', e);
+    console.error('Failed to save stored auth:', e);
   }
 }
 
 export function clearStoredAuth(): void {
   try {
-    localStorage.removeItem('oc_auth_data');
+    localStorage.removeItem(AUTH_KEY);
   } catch (e) {
-    console.error('Error clearing stored auth:', e);
+    console.error('Failed to clear stored auth:', e);
   }
 }
 
-// Guest dismissal state helper
 export function isGuestDismissed(): boolean {
   try {
-    return localStorage.getItem('oc_guest_dismissed') === 'true';
-  } catch (e) {
+    return localStorage.getItem(GUEST_KEY) === 'true';
+  } catch {
     return false;
   }
 }
 
 export function setGuestDismissed(dismissed: boolean): void {
   try {
-    localStorage.setItem('oc_guest_dismissed', dismissed ? 'true' : 'false');
+    localStorage.setItem(GUEST_KEY, dismissed ? 'true' : 'false');
   } catch (e) {
-    console.error('Error saving guest state:', e);
+    console.error('Failed to update guest dismissal state:', e);
   }
 }
 
-// Client-side fallback sync helpers for static hosting
+// ----------------------------------------------------
+// Client-Side Authentication Engine (Required by AuthModal.tsx)
+// ----------------------------------------------------
+
+function getStoredUsers(): Record<string, { user: UserProfile; passwordHash: string }> {
+  try {
+    const raw = localStorage.getItem(LOCAL_USERS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveUsers(users: Record<string, { user: UserProfile; passwordHash: string }>): void {
+  try {
+    localStorage.setItem(LOCAL_USERS_KEY, JSON.stringify(users));
+  } catch (e) {
+    console.error('Failed to save users database:', e);
+  }
+}
+
+export async function clientSignUp(
+  email: string,
+  password: string,
+  name?: string
+): Promise<{ user: UserProfile; token: string }> {
+  const users = getStoredUsers();
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (users[normalizedEmail]) {
+    throw new Error('An account with this email already exists.');
+  }
+
+  const displayName = name?.trim() || normalizedEmail.split('@')[0];
+  const newUser: UserProfile = {
+    id: 'user_' + Math.random().toString(36).substring(2, 11),
+    email: normalizedEmail,
+    name: displayName,
+    avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(displayName)}`,
+    createdAt: new Date().toISOString(),
+  } as any;
+
+  users[normalizedEmail] = {
+    user: newUser,
+    passwordHash: btoa(password), // Simple client-side hash for offline persistence
+  };
+  saveUsers(users);
+
+  const token = 'token_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+  return { user: newUser, token };
+}
+
+export async function clientLogIn(
+  email: string,
+  password: string
+): Promise<{ user: UserProfile; token: string }> {
+  const users = getStoredUsers();
+  const normalizedEmail = email.trim().toLowerCase();
+  const record = users[normalizedEmail];
+
+  if (!record || record.passwordHash !== btoa(password)) {
+    throw new Error('Invalid email or password.');
+  }
+
+  const token = 'token_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+  return { user: record.user, token };
+}
+
+export async function clientGoogleSignIn(): Promise<{ user: UserProfile; token: string }> {
+  // Offline/client-side simulated Google sign-in handler
+  const googleUser: UserProfile = {
+    id: 'g_user_' + Math.random().toString(36).substring(2, 9),
+    email: 'google.user@example.com',
+    name: 'Google Scholar',
+    avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=GoogleScholar',
+    createdAt: new Date().toISOString(),
+  } as any;
+
+  const token = 'g_token_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+  return { user: googleUser, token };
+}
+
+// ----------------------------------------------------
+// Sync & Fallback Helpers (Required by App.tsx)
+// ----------------------------------------------------
+
 export async function apiPushUserSync(data: any): Promise<boolean> {
   try {
-    localStorage.setItem('oc_synced_user_data', JSON.stringify(data));
+    localStorage.setItem(SYNC_KEY, JSON.stringify(data));
     return true;
   } catch (e) {
-    console.error('Error pushing user sync:', e);
+    console.error('Error syncing user data locally:', e);
     return false;
   }
 }
 
 export async function apiPullUserSync(): Promise<any> {
   try {
-    const raw = localStorage.getItem('oc_synced_user_data');
+    const raw = localStorage.getItem(SYNC_KEY);
     return raw ? JSON.parse(raw) : null;
   } catch (e) {
-    console.error('Error pulling user sync:', e);
+    console.error('Error loading synced user data:', e);
     return null;
   }
 }
 
-// Password update helper
 export async function apiChangePassword(currentPassword: string, newPassword: string): Promise<void> {
-  const user = auth.currentUser;
-  if (!user || !user.email) {
-    throw new Error('No user currently logged in');
+  const authData = loadStoredAuth();
+  if (!authData || !authData.user.email) {
+    throw new Error('No user currently logged in.');
   }
 
-  const credential = EmailAuthProvider.credential(user.email, currentPassword);
-  await reauthenticateWithCredential(user, credential);
-  await updatePassword(user, newPassword);
+  const users = getStoredUsers();
+  const email = authData.user.email.toLowerCase();
+  const record = users[email];
+
+  if (!record || record.passwordHash !== btoa(currentPassword)) {
+    throw new Error('Current password is incorrect.');
+  }
+
+  record.passwordHash = btoa(newPassword);
+  users[email] = record;
+  saveUsers(users);
 }
 
-// Error mapping helper
 export function getFriendlyAuthError(errorCode: string): string {
   switch (errorCode) {
     case 'auth/email-already-in-use':
@@ -95,9 +194,7 @@ export function getFriendlyAuthError(errorCode: string): string {
     case 'auth/wrong-password':
     case 'auth/invalid-credential':
       return 'Invalid email or password.';
-    case 'auth/popup-closed-by-user':
-      return 'Google sign-in popup was closed before finishing.';
     default:
-      return 'Authentication failed. Please try again.';
+      return errorCode || 'Authentication failed. Please try again.';
   }
 }
