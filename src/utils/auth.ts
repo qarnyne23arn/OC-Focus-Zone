@@ -32,6 +32,44 @@ export function clearStoredAuth(): void {
   }
 }
 
+// Guest dismissal state helper
+export function isGuestDismissed(): boolean {
+  try {
+    return localStorage.getItem('oc_guest_dismissed') === 'true';
+  } catch (e) {
+    return false;
+  }
+}
+
+export function setGuestDismissed(dismissed: boolean): void {
+  try {
+    localStorage.setItem('oc_guest_dismissed', dismissed ? 'true' : 'false');
+  } catch (e) {
+    console.error('Error saving guest state:', e);
+  }
+}
+
+// Client-side fallback sync helpers for static hosting
+export async function apiPushUserSync(data: any): Promise<boolean> {
+  try {
+    localStorage.setItem('oc_synced_user_data', JSON.stringify(data));
+    return true;
+  } catch (e) {
+    console.error('Error pushing user sync:', e);
+    return false;
+  }
+}
+
+export async function apiPullUserSync(): Promise<any> {
+  try {
+    const raw = localStorage.getItem('oc_synced_user_data');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    console.error('Error pulling user sync:', e);
+    return null;
+  }
+}
+
 // Password update helper
 export async function apiChangePassword(currentPassword: string, newPassword: string): Promise<void> {
   const user = auth.currentUser;
