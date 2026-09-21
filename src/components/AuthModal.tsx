@@ -14,7 +14,7 @@ import {
   Laptop,
 } from 'lucide-react';
 import { UserProfile } from '../types';
-import { clientSignUp, clientLogIn, clientGoogleSignIn, saveStoredAuth, setGuestDismissed } from '../utils/auth';
+import { apiSignUp, apiLogIn, apiGoogleSignIn, saveStoredAuth, setGuestDismissed } from '../utils/auth';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -68,7 +68,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
     try {
       if (mode === 'signup') {
-        const result = await clientSignUp(email.trim(), password, name.trim());
+        const result = await apiSignUp(email.trim(), password, name.trim());
         saveStoredAuth(result.user, result.token);
         setSuccessMsg(`Welcome, ${result.user.name}! Your account has been created.`);
         setTimeout(() => {
@@ -76,7 +76,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           onClose();
         }, 600);
       } else {
-        const result = await clientLogIn(email.trim(), password);
+        const result = await apiLogIn(email.trim(), password);
         saveStoredAuth(result.user, result.token);
         setSuccessMsg(`Welcome back, ${result.user.name}!`);
         setTimeout(() => {
@@ -97,7 +97,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
     setIsLoading(true);
 
     try {
-      const result = await clientGoogleSignIn();
+      const result = await apiGoogleSignIn();
       saveStoredAuth(result.user, result.token);
       setSuccessMsg(`Welcome, ${result.user.name}!`);
       setTimeout(() => {
@@ -156,11 +156,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(6,182,212,0.7)]"
             />
           </div>
-          <h2
-            className={`text-2xl font-black tracking-wider font-['Plus_Jakarta_Sans'] ${
-              isLight ? 'text-slate-900' : 'text-white'
-            }`}
-          >
+          <h2 className={`text-2xl font-black tracking-wider font-['Plus_Jakarta_Sans'] ${
+            isLight ? 'text-slate-900' : 'text-white'
+          }`}>
             {mode === 'signup' ? 'Create Your Account' : 'Welcome Back to OC'}
           </h2>
           <p className={`text-xs mt-1 max-w-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
@@ -171,32 +169,27 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
 
         {/* Multi-Device Auto-Sync Banner */}
-        <div
-          className={`mb-5 p-2.5 rounded-xl border flex items-center gap-3 ${
-            isLight
-              ? 'bg-[#dce9ed] border-cyan-400/40 text-slate-800'
-              : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-200/90'
-          }`}
-        >
+        <div className={`mb-5 p-2.5 rounded-xl border flex items-center gap-3 ${
+          isLight
+            ? 'bg-[#dce9ed] border-cyan-400/40 text-slate-800'
+            : 'bg-cyan-500/10 border-cyan-500/20 text-cyan-200/90'
+        }`}>
           <div className={`flex items-center gap-1 ${isLight ? 'text-cyan-800' : 'text-cyan-300'}`}>
             <Laptop className="w-4 h-4" />
             <span className="text-[11px] font-bold">⇄</span>
             <Smartphone className="w-3.5 h-3.5" />
           </div>
           <p className="text-[11px] leading-tight">
-            <span className={`font-bold ${isLight ? 'text-cyan-900' : 'text-cyan-300'}`}>
-              Multi-Device Auto Sync:
-            </span>{' '}
-            Use one account on laptop, tablet, & phone with live auto-refresh.
+            <span className={`font-bold ${isLight ? 'text-cyan-900' : 'text-cyan-300'}`}>Multi-Device Auto Sync:</span> Use one account on laptop, tablet, & phone with live auto-refresh.
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div
-          className={`grid grid-cols-2 p-1 rounded-2xl border mb-5 ${
-            isLight ? 'bg-[#dce9ed] border-slate-300' : 'bg-slate-900/90 border-slate-800'
-          }`}
-        >
+        {/* Tab Switcher: Sign In vs Sign Up */}
+        <div className={`grid grid-cols-2 p-1 rounded-2xl border mb-5 ${
+          isLight
+            ? 'bg-[#dce9ed] border-slate-300'
+            : 'bg-slate-900/90 border-slate-800'
+        }`}>
           <button
             type="button"
             onClick={() => {
@@ -207,8 +200,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               mode === 'signup'
                 ? 'bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
                 : isLight
-                ? 'text-slate-700 hover:text-slate-950'
-                : 'text-slate-400 hover:text-slate-200'
+                  ? 'text-slate-700 hover:text-slate-950'
+                  : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <UserPlus className="w-3.5 h-3.5" />
@@ -224,8 +217,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               mode === 'login'
                 ? 'bg-cyan-500 text-slate-950 shadow-[0_0_15px_rgba(6,182,212,0.4)]'
                 : isLight
-                ? 'text-slate-700 hover:text-slate-950'
-                : 'text-slate-400 hover:text-slate-200'
+                  ? 'text-slate-700 hover:text-slate-950'
+                  : 'text-slate-400 hover:text-slate-200'
             }`}
           >
             <LogIn className="w-3.5 h-3.5" />
@@ -285,11 +278,9 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           <div className={`absolute inset-0 flex items-center ${isLight ? 'border-slate-300' : 'border-slate-800'}`}>
             <div className={`w-full border-t ${isLight ? 'border-slate-300' : 'border-slate-800'}`} />
           </div>
-          <span
-            className={`relative px-3 text-[10px] font-semibold uppercase tracking-wider ${
-              isLight ? 'bg-[#edf5f7] text-slate-500' : 'bg-[#061022] text-slate-400'
-            }`}
-          >
+          <span className={`relative px-3 text-[10px] font-semibold uppercase tracking-wider ${
+            isLight ? 'bg-[#edf5f7] text-slate-500' : 'bg-[#061022] text-slate-400'
+          }`}>
             Or with email
           </span>
         </div>
@@ -298,19 +289,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-3.5">
           {mode === 'signup' && (
             <div>
-              <label
-                className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                  isLight ? 'text-slate-800' : 'text-slate-300'
-                }`}
-              >
+              <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                isLight ? 'text-slate-800' : 'text-slate-300'
+              }`}>
                 Your Name
               </label>
               <div className="relative">
-                <User
-                  className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
-                    isLight ? 'text-slate-500' : 'text-slate-500'
-                  }`}
-                />
+                <User className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                  isLight ? 'text-slate-500' : 'text-slate-500'
+                }`} />
                 <input
                   type="text"
                   value={name}
@@ -327,19 +314,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           )}
 
           <div>
-            <label
-              className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                isLight ? 'text-slate-800' : 'text-slate-300'
-              }`}
-            >
+            <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+              isLight ? 'text-slate-800' : 'text-slate-300'
+            }`}>
               Email Address
             </label>
             <div className="relative">
-              <Mail
-                className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
-                  isLight ? 'text-slate-500' : 'text-slate-500'
-                }`}
-              />
+              <Mail className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                isLight ? 'text-slate-500' : 'text-slate-500'
+              }`} />
               <input
                 type="email"
                 value={email}
@@ -356,19 +339,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
 
           <div>
-            <label
-              className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                isLight ? 'text-slate-800' : 'text-slate-300'
-              }`}
-            >
+            <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+              isLight ? 'text-slate-800' : 'text-slate-300'
+            }`}>
               Password
             </label>
             <div className="relative">
-              <Lock
-                className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
-                  isLight ? 'text-slate-500' : 'text-slate-500'
-                }`}
-              />
+              <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                isLight ? 'text-slate-500' : 'text-slate-500'
+              }`} />
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
@@ -393,19 +372,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
           {mode === 'signup' && (
             <div>
-              <label
-                className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
-                  isLight ? 'text-slate-800' : 'text-slate-300'
-                }`}
-              >
+              <label className={`block text-[11px] font-bold uppercase tracking-wider mb-1 ${
+                isLight ? 'text-slate-800' : 'text-slate-300'
+              }`}>
                 Confirm Password
               </label>
               <div className="relative">
-                <Lock
-                  className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
-                    isLight ? 'text-slate-500' : 'text-slate-500'
-                  }`}
-                />
+                <Lock className={`absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                  isLight ? 'text-slate-500' : 'text-slate-500'
+                }`} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={confirmPassword}
