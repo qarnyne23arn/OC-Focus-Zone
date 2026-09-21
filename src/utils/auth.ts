@@ -5,6 +5,34 @@ import {
   EmailAuthProvider 
 } from 'firebase/auth';
 
+// Storage helpers expected by App.tsx
+export function loadStoredAuth(): any {
+  try {
+    const raw = localStorage.getItem('oc_auth_data');
+    return raw ? JSON.parse(raw) : null;
+  } catch (e) {
+    console.error('Error loading stored auth:', e);
+    return null;
+  }
+}
+
+export function saveStoredAuth(data: any): void {
+  try {
+    localStorage.setItem('oc_auth_data', JSON.stringify(data));
+  } catch (e) {
+    console.error('Error saving stored auth:', e);
+  }
+}
+
+export function clearStoredAuth(): void {
+  try {
+    localStorage.removeItem('oc_auth_data');
+  } catch (e) {
+    console.error('Error clearing stored auth:', e);
+  }
+}
+
+// Password update helper
 export async function apiChangePassword(currentPassword: string, newPassword: string): Promise<void> {
   const user = auth.currentUser;
   if (!user || !user.email) {
@@ -16,6 +44,7 @@ export async function apiChangePassword(currentPassword: string, newPassword: st
   await updatePassword(user, newPassword);
 }
 
+// Error mapping helper
 export function getFriendlyAuthError(errorCode: string): string {
   switch (errorCode) {
     case 'auth/email-already-in-use':
